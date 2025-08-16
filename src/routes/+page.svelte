@@ -1,17 +1,31 @@
 <script lang="ts">
     import type { PageProps } from './$types';
+    import MergeRequestTable from './MergeRequestTable.svelte';
 
     let { data }: PageProps = $props();
 </script>
 
 <h1>Merge Requests</h1>
 
-{#await data.client.mergeRequests}
-    <p>Loading...</p>
-{:then mergeRequests}
-    <ul>
-        {#each mergeRequests as mr (mr.id)}
-            <li>{mr.title}</li>
-        {/each}
-    </ul>
-{/await}
+{#if data.client.loadError}
+    <p>Error: {data.client.loadError.message}</p>
+{:else}
+    <div class="table-container">
+        <div>
+            <h2>Assigned</h2>
+            <MergeRequestTable mergeRequests={data.client.assigned ?? []} />
+        </div>
+        <div>
+            <h2>Reviewing</h2>
+            <MergeRequestTable mergeRequests={data.client.reviewing ?? []} showAuthor={true} />
+        </div>
+    </div>
+{/if}
+
+<style>
+    .table-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-column-gap: 50px;
+    }
+</style>
