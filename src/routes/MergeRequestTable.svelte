@@ -34,6 +34,11 @@
                     {#if mr.isApproved}
                         <i class="approved fa-regular fa-circle-check"></i>
                     {/if}
+                    {#if mr.ciLink}
+                        <a href={mr.ciLink}>{mr.ciStatus}</a>
+                    {:else}
+                        {mr.ciStatus}
+                    {/if}
                 </p>
             </div>
             <p class="subtitle">Updated {moment(mr.updatedAt).fromNow()}</p>
