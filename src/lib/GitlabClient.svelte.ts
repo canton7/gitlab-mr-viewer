@@ -14,9 +14,9 @@ export interface MergeRequest {
     reference: string;
 }
 
-export function createGitlabClient(host: string, token: string): GitlabClient {
+export function createGitlabClient(host: string | null, token: string | null): GitlabClient {
     let api = null;
-    if (browser) {
+    if (browser && host && token) {
         api = new Gitlab({
             host: host,
             token: token
@@ -32,8 +32,9 @@ export class GitlabClient {
     private readonly _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
 
-    assigned = $state<MergeRequest[] | null>(null);
-    reviewing = $state<MergeRequest[] | null>(null);
+    assigned = $state<MergeRequest[]>([]);
+    reviewing = $state<MergeRequest[]>([]);
+    isLoading = $state(true);
     loadError = $state<Error | null>(null);
 
     constructor(api: CoreGitlab | null) {
@@ -101,5 +102,7 @@ export class GitlabClient {
             this.assigned = assigned;
             console.log(assigned[0]);
         });
+
+        this.isLoading = false;
     }
 }
