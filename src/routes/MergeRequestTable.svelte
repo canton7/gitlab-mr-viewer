@@ -27,10 +27,14 @@
         </div>
         <div class="column-2">
             <div>
-                {mr.resolvedDiscussions} / {mr.totalDiscussions}
-                {#if mr.isApproved}
-                    <i class="approved fa-regular fa-circle-check"></i>
-                {/if}
+                <p>
+                    {#if mr.totalDiscussions > 0}
+                        {mr.resolvedDiscussions} / {mr.totalDiscussions}
+                    {/if}
+                    {#if mr.isApproved}
+                        <i class="approved fa-regular fa-circle-check"></i>
+                    {/if}
+                </p>
             </div>
             <p class="subtitle">Updated {moment(mr.updatedAt).fromNow()}</p>
         </div>
@@ -78,7 +82,6 @@
 
     .approved {
         color: green;
-        width: 100%;
         text-align: right;
     }
 </style>
