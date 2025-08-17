@@ -4,12 +4,20 @@
     "tabWidth": 4,
     "trailingComma": "none",
     "printWidth": 120,
-    "plugins": ["prettier-plugin-svelte"],
+    "plugins": [
+        "prettier-plugin-svelte"
+    ],
     "overrides": [
         {
             "files": "*.svelte",
             "options": {
                 "parser": "svelte"
+            }
+        },
+        {
+            "files": "*.yaml",
+            "options": {
+                "tabWidth": 2
             }
         }
     ]
