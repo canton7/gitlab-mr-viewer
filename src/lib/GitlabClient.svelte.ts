@@ -1,10 +1,17 @@
 import { Gitlab } from '@gitbeaker/rest';
 import { browser } from '$app/environment';
 import { gitlabSettings } from '$lib/Settings.svelte';
-import { Gitlab as CoreGitlab, type ExpandedUserSchema, type MergeRequestSchemaWithBasicLabels } from '@gitbeaker/core';
+import {
+    Gitlab as CoreGitlab,
+    type CommitablePipelineStatus,
+    type ExpandedUserSchema,
+    type MergeRequestSchemaWithBasicLabels
+} from '@gitbeaker/core';
 import { readonly, writable } from 'svelte/store';
 
 const UPDATE_PERIOD_MS = 5 * 60 * 1000;
+
+export type GitlabCiStatus = CommitablePipelineStatus;
 
 export interface MergeRequest {
     id: number;
@@ -17,6 +24,8 @@ export interface MergeRequest {
     isApproved: boolean;
     resolvedDiscussions: number;
     totalDiscussions: number;
+    ciStatus: GitlabCiStatus;
+    ciLink: string | null;
 }
 
 export class GitlabClient {
@@ -51,11 +60,12 @@ export class GitlabClient {
     }
 
     private async mapMergeRequest(merge_request: MergeRequestSchemaWithBasicLabels): Promise<MergeRequest> {
-        const [approvals, discussions] = await Promise.all([
+        const [approvals, discussions, commitStatus] = await Promise.all([
             await this._api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
                 mergerequestIId: merge_request.iid
             }),
-            await this._api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid)
+            await this._api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid),
+            await this._api.Commits.allStatuses(merge_request.project_id, merge_request.sha)
         ]);
 
         let resolvable = 0;
@@ -70,7 +80,7 @@ export class GitlabClient {
                 }
             }
         }
-        console.log(discussions);
+
         return {
             id: merge_request.id,
             title: merge_request.title,
@@ -79,9 +89,11 @@ export class GitlabClient {
             updatedAt: merge_request.updated_at,
             authorName: merge_request.author.name,
             reference: merge_request.references.full.split('/').at(-1) ?? '',
-            isApproved: approvals.approved_by?.length > 0 ?? false,
+            isApproved: (approvals.approved_by?.length ?? 0) > 0,
             resolvedDiscussions: resolved,
-            totalDiscussions: resolvable
+            totalDiscussions: resolvable,
+            ciStatus: commitStatus.at(0)?.status ?? 'pending',
+            ciLink: commitStatus.at(0)?.target_url ?? null
         };
     }
 
