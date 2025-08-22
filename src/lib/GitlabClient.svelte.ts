@@ -2,16 +2,19 @@ import { Gitlab } from '@gitbeaker/rest';
 import { browser } from '$app/environment';
 import { Gitlab as CoreGitlab, type ExpandedUserSchema, type MergeRequestSchemaWithBasicLabels } from '@gitbeaker/core';
 
-const UPDATE_PERIOD_MS = 60000;
+const UPDATE_PERIOD_MS = 5 * 60 * 1000;
 
 export interface MergeRequest {
     id: number;
     title: string;
-    web_url: string;
-    created_at: string;
-    updated_at: string;
-    author_name: string;
+    webUrl: string;
+    createdAt: string;
+    updatedAt: string;
+    authorName: string;
     reference: string;
+    isApproved: boolean;
+    resolvedDiscussions: number;
+    totalDiscussions: number;
 }
 
 export function createGitlabClient(host: string | null, token: string | null): GitlabClient {
@@ -58,20 +61,46 @@ export class GitlabClient {
         }
     }
 
-    private async mapMergeRequest(merge_request: MergeRequestSchemaWithBasicLabels): Promise<MergeRequest> {
+    private async mapMergeRequest(
+        api: CoreGitlab,
+        merge_request: MergeRequestSchemaWithBasicLabels
+    ): Promise<MergeRequest> {
+        const [approvals, discussions] = await Promise.all([
+            await api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
+                mergerequestIId: merge_request.iid
+            }),
+            await api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid)
+        ]);
+
+        let resolvable = 0;
+        let resolved = 0;
+        for (const discussion of discussions) {
+            for (const note of discussion.notes ?? []) {
+                if (note.resolvable) {
+                    resolvable += 1;
+                }
+                if (note.resolved) {
+                    resolved += 1;
+                }
+            }
+        }
+        console.log(discussions);
         return {
             id: merge_request.id,
             title: merge_request.title,
-            web_url: merge_request.web_url,
-            created_at: merge_request.created_at,
-            updated_at: merge_request.updated_at,
-            author_name: merge_request.author.name,
-            reference: merge_request.references.full.split('/').at(-1) ?? ''
+            webUrl: merge_request.web_url,
+            createdAt: merge_request.created_at,
+            updatedAt: merge_request.updated_at,
+            authorName: merge_request.author.name,
+            reference: merge_request.references.full.split('/').at(-1) ?? '',
+            isApproved: approvals.approved_by?.length > 0 ?? false,
+            resolvedDiscussions: resolved,
+            totalDiscussions: resolvable
         };
     }
 
-    private async mapMergeRequests(merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>) {
-        return await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(x)));
+    private async mapMergeRequests(api: CoreGitlab, merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>) {
+        return await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(api, x)));
     }
 
     private async doRequest(action: (api: CoreGitlab, userId: number) => Promise<void>) {
@@ -91,16 +120,17 @@ export class GitlabClient {
         await this.doRequest(async (api, userId) => {
             const [reviewing, assigned] = await Promise.all([
                 this.mapMergeRequests(
+                    api,
                     api.MergeRequests.all({ state: 'opened', scope: 'all', reviewerId: userId, orderBy: 'updated_at' })
                 ),
                 this.mapMergeRequests(
+                    api,
                     api.MergeRequests.all({ state: 'opened', scope: 'all', assigneeId: userId, orderBy: 'updated_at' })
                 )
             ]);
 
             this.reviewing = reviewing;
             this.assigned = assigned;
-            console.log(assigned[0]);
         });
 
         this.isLoading = false;
