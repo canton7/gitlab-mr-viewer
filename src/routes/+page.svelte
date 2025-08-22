@@ -18,6 +18,10 @@
     // let { data }: PageProps = $props();
 </script>
 
+<svelte:head>
+    <title>Merge Requests</title>
+</svelte:head>
+
 <h1>Merge Requests</h1>
 
 {#if !client}
