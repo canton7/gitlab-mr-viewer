@@ -3,6 +3,7 @@
     import { gitlabSettings } from '$lib/Settings.svelte';
     import type { PageProps } from './$types';
     import MergeRequestTable from './MergeRequestTable.svelte';
+    import { resolve } from '$app/paths';
 
     let client: GitlabClient | null = $state(null);
     gitlabSettings.subscribe((settings) => {
@@ -20,7 +21,7 @@
 <h1>Merge Requests</h1>
 
 {#if !client}
-    <p>Configure in the <a href="/settings">Settings</a>.</p>
+    <p>Configure in the <a href={resolve('/settings')}>Settings</a>.</p>
 {:else if client.loadError}
     <p>Error: {client.loadError.message}</p>
 {:else if client.isLoading}

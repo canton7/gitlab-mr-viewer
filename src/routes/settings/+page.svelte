@@ -4,6 +4,7 @@
     import { gitlabSettings } from '$lib/Settings.svelte';
     import type { PageProps } from './$types';
     import { goto } from '$app/navigation';
+    import { resolve } from '$app/paths';
 
     // let { data }: PageProps = $props();
 
@@ -11,7 +12,7 @@
         cancel();
         $gitlabSettings.baseUrl = formData.get('baseUrl') as string;
         $gitlabSettings.accessToken = formData.get('accessToken') as string;
-        goto('/');
+        goto(resolve('/'));
     };
 </script>
 
