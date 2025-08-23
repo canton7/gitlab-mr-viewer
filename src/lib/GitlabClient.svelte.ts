@@ -7,7 +7,6 @@ import {
     type ExpandedUserSchema,
     type MergeRequestSchemaWithBasicLabels
 } from '@gitbeaker/core';
-import { readonly, writable } from 'svelte/store';
 
 const UPDATE_PERIOD_MS = 5 * 60 * 1000;
 
@@ -29,20 +28,29 @@ export interface MergeRequest {
 }
 
 export class GitlabClient {
-    private readonly _api: CoreGitlab;
-    private readonly _user: Promise<ExpandedUserSchema> | null = null;
+    private _api: CoreGitlab | null = null;
+    private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
 
+    isConfigured = $state(false);
     assigned = $state<MergeRequest[]>([]);
     reviewing = $state<MergeRequest[]>([]);
     isLoading = $state(true);
     loadError = $state<Error | null>(null);
 
-    constructor(api: CoreGitlab) {
+    setApi(api: CoreGitlab | null) {
         this._api = api;
 
         if (this._api) {
             this._user = this._api.Users.showCurrentUser();
+            this.isConfigured = true;
+        } else {
+            this._user = null;
+            this.assigned = [];
+            this.reviewing = [];
+            this.isLoading = true;
+            this.loadError = null;
+            this.isConfigured = false;
         }
     }
 
@@ -59,13 +67,16 @@ export class GitlabClient {
         }
     }
 
-    private async mapMergeRequest(merge_request: MergeRequestSchemaWithBasicLabels): Promise<MergeRequest> {
+    private async mapMergeRequest(
+        api: CoreGitlab,
+        merge_request: MergeRequestSchemaWithBasicLabels
+    ): Promise<MergeRequest> {
         const [approvals, discussions, commitStatus] = await Promise.all([
-            await this._api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
+            await api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
                 mergerequestIId: merge_request.iid
             }),
-            await this._api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid),
-            await this._api.Commits.allStatuses(merge_request.project_id, merge_request.sha)
+            await api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid),
+            await api.Commits.allStatuses(merge_request.project_id, merge_request.sha)
         ]);
 
         let resolvable = 0;
@@ -97,13 +108,17 @@ export class GitlabClient {
         };
     }
 
-    private async mapMergeRequests(merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>) {
-        return await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(x)));
+    private async mapMergeRequests(api: CoreGitlab, merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>) {
+        return await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(api, x)));
     }
 
-    private async doRequest(action: (userId: number) => Promise<void>) {
+    private async doRequest(action: (api: CoreGitlab, userId: number) => Promise<void>) {
+        if (!this._api) {
+            return;
+        }
+
         try {
-            await action((await this._user!).id);
+            await action(this._api, (await this._user!).id);
             this.loadError = null;
         } catch (err) {
             this.loadError = err as Error;
@@ -111,10 +126,11 @@ export class GitlabClient {
     }
 
     private async loadAsync() {
-        await this.doRequest(async (userId) => {
+        await this.doRequest(async (api, userId) => {
             const [reviewing, assigned] = await Promise.all([
                 this.mapMergeRequests(
-                    this._api.MergeRequests.all({
+                    api,
+                    api.MergeRequests.all({
                         state: 'opened',
                         scope: 'all',
                         reviewerId: userId,
@@ -122,7 +138,8 @@ export class GitlabClient {
                     })
                 ),
                 this.mapMergeRequests(
-                    this._api.MergeRequests.all({
+                    api,
+                    api.MergeRequests.all({
                         state: 'opened',
                         scope: 'all',
                         assigneeId: userId,
@@ -139,16 +156,15 @@ export class GitlabClient {
     }
 }
 
-const client = writable<GitlabClient | null>(null);
-export const gitlabClient = readonly(client);
+export const gitlabClient = new GitlabClient();
 gitlabSettings.subscribe((settings) => {
     if (!browser || !settings?.baseUrl || !settings?.accessToken) {
-        client.set(null);
+        gitlabClient.setApi(null);
     } else {
         const api = new Gitlab({
             host: settings.baseUrl,
             token: settings.accessToken
         });
-        client.set(new GitlabClient(api));
+        gitlabClient.setApi(api);
     }
 });

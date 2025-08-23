@@ -6,7 +6,7 @@
     import { browser } from '$app/environment';
 
     // let { data }: PageProps = $props();
-    $client?.start();
+    client?.start();
 </script>
 
 <svelte:head>
@@ -15,21 +15,21 @@
 
 <h1>Merge Requests</h1>
 
-{#if !browser || $client?.isLoading}
+{#if !browser || client.isLoading}
     <p>Loading...</p>
-{:else if !$client}
+{:else if !client.isConfigured}
     <p>Configure in the <a href={resolve('/settings')}>Settings</a>.</p>
-{:else if $client.loadError}
-    <p>Error: {$client.loadError.message}</p>
+{:else if client.loadError}
+    <p>Error: {client.loadError.message}</p>
 {:else}
     <div class="table-container">
         <div>
             <h2>Assigned</h2>
-            <MergeRequestTable mergeRequests={$client.assigned ?? []} />
+            <MergeRequestTable mergeRequests={client.assigned ?? []} />
         </div>
         <div>
             <h2>Reviewing</h2>
-            <MergeRequestTable mergeRequests={$client.reviewing ?? []} showAuthor={true} />
+            <MergeRequestTable mergeRequests={client.reviewing ?? []} showAuthor={true} />
         </div>
     </div>
 {/if}
