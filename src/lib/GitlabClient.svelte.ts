@@ -34,7 +34,7 @@ export class GitlabClient {
     private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
 
-    #state = $state<State>({ kind: 'unconfigured' });
+    private _state = $state<State>({ kind: 'unconfigured' });
     assigned = $state<MergeRequest[]>([]);
     reviewing = $state<MergeRequest[]>([]);
 
@@ -43,17 +43,17 @@ export class GitlabClient {
 
         if (this._api) {
             this._user = this._api.Users.showCurrentUser();
-            this.#state = { kind: 'loading' };
+            this._state = { kind: 'loading' };
         } else {
             this._user = null;
             this.assigned = [];
             this.reviewing = [];
-            this.#state = { kind: 'unconfigured' };
+            this._state = { kind: 'unconfigured' };
         }
     }
 
     get state() {
-        return this.#state;
+        return this._state;
     }
 
     start() {
@@ -121,9 +121,9 @@ export class GitlabClient {
 
         try {
             await action(this._api, (await this._user!).id);
-            this.#state = { kind: 'loaded' };
+            this._state = { kind: 'loaded' };
         } catch (err) {
-            this.#state = { kind: 'error', error: err as Error };
+            this._state = { kind: 'error', error: err as Error };
         }
     }
 
