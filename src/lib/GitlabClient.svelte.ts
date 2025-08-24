@@ -27,31 +27,33 @@ export interface MergeRequest {
     ciLink: string | null;
 }
 
+type State = { kind: 'unconfigured' } | { kind: 'loading' } | { kind: 'loaded' } | { kind: 'error'; error: Error };
+
 export class GitlabClient {
     private _api: CoreGitlab | null = null;
     private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
 
-    isConfigured = $state(false);
+    #state = $state<State>({ kind: 'unconfigured' });
     assigned = $state<MergeRequest[]>([]);
     reviewing = $state<MergeRequest[]>([]);
-    isLoading = $state(true);
-    loadError = $state<Error | null>(null);
 
     setApi(api: CoreGitlab | null) {
         this._api = api;
 
         if (this._api) {
             this._user = this._api.Users.showCurrentUser();
-            this.isConfigured = true;
+            this.#state = { kind: 'loading' };
         } else {
             this._user = null;
             this.assigned = [];
             this.reviewing = [];
-            this.isLoading = true;
-            this.loadError = null;
-            this.isConfigured = false;
+            this.#state = { kind: 'unconfigured' };
         }
+    }
+
+    get state() {
+        return this.#state;
     }
 
     start() {
@@ -119,9 +121,9 @@ export class GitlabClient {
 
         try {
             await action(this._api, (await this._user!).id);
-            this.loadError = null;
+            this.#state = { kind: 'loaded' };
         } catch (err) {
-            this.loadError = err as Error;
+            this.#state = { kind: 'error', error: err as Error };
         }
     }
 
@@ -151,8 +153,6 @@ export class GitlabClient {
             this.reviewing = reviewing;
             this.assigned = assigned;
         });
-
-        this.isLoading = false;
     }
 }
 

@@ -15,12 +15,12 @@
 
 <h1>Merge Requests</h1>
 
-{#if !browser || client.isLoading}
+{#if !browser || client.state.kind == 'loading'}
     <p>Loading...</p>
-{:else if !client.isConfigured}
+{:else if client.state.kind == 'unconfigured'}
     <p>Configure in the <a href={resolve('/settings')}>Settings</a>.</p>
-{:else if client.loadError}
-    <p>Error: {client.loadError.message}</p>
+{:else if client.state.kind == 'error'}
+    <p>Error: {client.state.error}</p>
 {:else}
     <div class="table-container">
         <div>
