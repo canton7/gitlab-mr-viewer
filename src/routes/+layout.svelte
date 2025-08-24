@@ -10,6 +10,6 @@
     <link rel="icon" href={favicon} />
 </svelte:head>
 
-<main class="container">
+<div class="container-md">
     {@render children?.()}
-</main>
+</div>

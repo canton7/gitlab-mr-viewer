@@ -16,20 +16,15 @@
 
 <div class="merge-request-table">
     {#each mergeRequests as mr (mr.id)}
-        <div>
-            <p><a href={mr.webUrl}>{mr.title}</a></p>
-            <p class="subtitle">
-                {mr.reference} · {moment(mr.createdAt).fromNow()}
-                {#if showAuthor}
-                    by {mr.authorName}
-                {/if}
-            </p>
-        </div>
-        <div class="column-2">
-            <div>
-                <p>
+        <div class="card p-2">
+            <div class="headline">
+                <p><a href={mr.webUrl}>{mr.title}</a></p>
+                <div>
                     {#if mr.totalDiscussions > 0}
-                        {mr.resolvedDiscussions} / {mr.totalDiscussions}
+                        <div class="bubble">
+                            <i class="fa-regular fa-comment"></i>
+                            {mr.resolvedDiscussions} / {mr.totalDiscussions}
+                        </div>
                     {/if}
                     {#if mr.isApproved}
                         <i class="approved fa-regular fa-circle-check"></i>
@@ -39,9 +34,17 @@
                     {:else}
                         {mr.ciStatus}
                     {/if}
-                </p>
+                </div>
             </div>
-            <p class="subtitle">Updated {moment(mr.updatedAt).fromNow()}</p>
+            <div class="footer">
+                <p>
+                    {mr.reference} · {moment(mr.createdAt).fromNow()}
+                    {#if showAuthor}
+                        by {mr.authorName}
+                    {/if}
+                </p>
+                <p>Updated {moment(mr.updatedAt).fromNow()}</p>
+            </div>
         </div>
     {/each}
 </div>
@@ -51,38 +54,27 @@
         text-align: center;
     }
 
-    .merge-request-table {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-column-gap: 20px;
-        grid-row-gap: 20px;
-    }
-
-    .merge-request-table > div {
+    .headline {
         display: flex;
-        flex-direction: column;
+        justify-content: space-between;
     }
 
-    .merge-request-table a {
-        text-decoration: none;
+    .bubble {
+        display: inline-block;
+        border: 1px solid black;
+        padding: 0 5px;
+        height: 25px;
+        border-radius: 25px;
     }
 
-    .merge-request-table a:hover {
-        text-decoration: underline;
-    }
+    .footer {
+        display: flex;
+        justify-content: space-between;
 
-    .merge-request-table p {
-        font-size: 0.75rem;
-        margin: 0;
-    }
-
-    .column-2 {
-        text-align: right;
-    }
-
-    p.subtitle {
-        font-size: 0.6rem;
-        margin-top: auto;
+        p {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+        }
     }
 
     .approved {

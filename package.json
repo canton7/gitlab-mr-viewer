@@ -16,7 +16,6 @@
     "devDependencies": {
         "@eslint/compat": "^1.2.5",
         "@eslint/js": "^9.18.0",
-        "@picocss/pico": "^2.1.1",
         "@sveltejs/adapter-auto": "^6.0.0",
         "@sveltejs/adapter-static": "^3.0.9",
         "@sveltejs/kit": "^2.22.0",
@@ -37,6 +36,7 @@
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.0.0",
         "@gitbeaker/rest": "^43.4.0",
+        "bootstrap": "^5.3.8",
         "moment": "^2.30.1"
     }
 }
