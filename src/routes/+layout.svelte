@@ -2,6 +2,8 @@
     import favicon from '$lib/assets/favicon.svg';
     import '$lib/styles/styles.scss';
     import '@fortawesome/fontawesome-free/css/all.min.css';
+    // import 'beercss/src/cdn/beer.css';
+    import 'beercss/src/cdn/beer.ts';
 
     let { children } = $props();
 </script>
@@ -10,6 +12,6 @@
     <link rel="icon" href={favicon} />
 </svelte:head>
 
-<main class="container">
+<main class="responsive">
     {@render children?.()}
 </main>

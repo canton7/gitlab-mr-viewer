@@ -37,6 +37,7 @@
     "dependencies": {
         "@fortawesome/fontawesome-free": "^7.0.0",
         "@gitbeaker/rest": "^43.4.0",
+        "beercss": "^3.11.33",
         "moment": "^2.30.1"
     }
 }
