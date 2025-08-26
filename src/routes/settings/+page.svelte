@@ -23,17 +23,17 @@
 <h1>Settings</h1>
 
 <form use:enhance={save} method="POST">
-    <label>
-        GitLab URL
-        <input name="baseUrl" required value={$gitlabSettings.baseUrl} />
-        <small>Don't include 'rest/api' etc</small>
-    </label>
+    <div class="mb-3">
+        <label for="baseUrl" class="form-label">GitLab URL</label>
+        <input name="baseUrl" class="form-control" required value={$gitlabSettings.baseUrl} />
+        <div class="form-text">Don't include 'rest/api' etc</div>
+    </div>
 
-    <label>
-        GitLab Personal Access Token
-        <input type="password" name="accessToken" required value={$gitlabSettings.accessToken} />
-        <small>This needs to have the read_api scope</small>
-    </label>
+    <div class="mb-3">
+        <label for="accessToken" class="form-labeL">GitLab Personal Access Token</label>
+        <input type="password" class="form-control" name="accessToken" required value={$gitlabSettings.accessToken} />
+        <div class="form-text">This needs to have the read_api scope</div>
+    </div>
 
-    <input type="submit" value="Save" />
+    <input type="submit" class="btn btn-primary" value="Save" />
 </form>
