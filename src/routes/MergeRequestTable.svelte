@@ -134,7 +134,7 @@
     .content {
         display: grid;
         grid-template-rows: 1fr auto;
-        row-gap: 10px;
+        row-gap: 8px;
         padding: 5px 8px;
         cursor: pointer;
     }
