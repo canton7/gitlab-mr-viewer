@@ -10,7 +10,7 @@ import {
 
 const UPDATE_PERIOD_MS = 5 * 60 * 1000;
 
-export type GitlabCiStatus = CommitablePipelineStatus;
+export type GitlabCiStatus = CommitablePipelineStatus | 'none';
 
 export interface MergeRequest {
     id: number;
@@ -105,7 +105,7 @@ export class GitlabClient {
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
             resolvedDiscussions: resolved,
             totalDiscussions: resolvable,
-            ciStatus: commitStatus.at(0)?.status ?? 'pending',
+            ciStatus: commitStatus.at(0)?.status ?? 'none',
             ciLink: commitStatus.at(0)?.target_url ?? null
         };
     }
