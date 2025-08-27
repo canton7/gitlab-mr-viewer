@@ -13,7 +13,7 @@ const UPDATE_PERIOD_MS = 5 * 60 * 1000;
 export type GitlabCiStatus = CommitablePipelineStatus | 'none';
 
 export interface MergeRequest {
-    id: number;
+    key: string;
     title: string;
     webUrl: string;
     createdAt: string;
@@ -95,7 +95,7 @@ export class GitlabClient {
         }
 
         return {
-            id: merge_request.id,
+            key: `${merge_request.project_id}-${merge_request.id}`,
             title: merge_request.title,
             webUrl: merge_request.web_url,
             createdAt: merge_request.created_at,
