@@ -4,9 +4,27 @@
     import MergeRequestTable from './MergeRequestTable.svelte';
     import { resolve } from '$app/paths';
     import { browser } from '$app/environment';
+    import { onMount } from 'svelte';
+    import { on } from 'svelte/events';
 
     // let { data }: PageProps = $props();
-    client?.start();
+
+    onMount(() => {
+        client?.start();
+
+        const removeListener = on(document, 'visibilitychange', () => {
+            if (document.hidden) {
+                client?.stop();
+            } else {
+                client?.start();
+            }
+        });
+
+        return () => {
+            client?.stop();
+            removeListener();
+        };
+    });
 </script>
 
 <svelte:head>
