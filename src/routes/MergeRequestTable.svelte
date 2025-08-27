@@ -44,7 +44,7 @@
 {/if}
 
 <div class="merge-request-table">
-    {#each mergeRequests as mr (mr.id)}
+    {#each mergeRequests as mr (mr.key)}
         <div class={['card', getOverallClass(mr), getApprovalClass(mr), getDiscussionClass(mr), getCiClass(mr)]}>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
