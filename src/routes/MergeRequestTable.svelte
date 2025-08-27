@@ -1,17 +1,16 @@
 <script lang="ts">
-    import { goto } from '$app/navigation';
     import type { MergeRequest } from '$lib/GitlabClient.svelte';
     import moment from 'moment';
 
     interface Props {
         mergeRequests: MergeRequest[];
-        showAuthor?: boolean;
+        role: 'assignee' | 'reviewer';
     }
 
-    let { mergeRequests, showAuthor = false }: Props = $props();
+    let { mergeRequests, role }: Props = $props();
 
     function getOverallClass(mr: MergeRequest) {
-        if (mr.ciStatus == 'failed') {
+        if (mr.ciStatus != 'none' && mr.ciStatus != 'success') {
             return 'overall-ci';
         }
         if (mr.totalDiscussions != mr.resolvedDiscussions) {
@@ -21,7 +20,13 @@
     }
 
     function getApprovalClass(mr: MergeRequest) {
-        return mr.isApproved ? 'approved' : 'not-approved';
+        if (mr.isApproved) {
+            return 'approved';
+        }
+        if (mr.totalDiscussions == mr.resolvedDiscussions) {
+            return 'ready-for-approval';
+        }
+        return 'not-approved';
     }
 
     function getDiscussionClass(mr: MergeRequest) {
@@ -29,7 +34,7 @@
     }
 
     function getCiClass(mr: MergeRequest) {
-        if (mr.ciStatus == 'success' || mr.ciStatus == 'none') {
+        if (mr.ciStatus == 'success') {
             return 'ci-success';
         }
         if (mr.ciStatus == 'failed') {
@@ -45,7 +50,16 @@
 
 <div class="merge-request-table">
     {#each mergeRequests as mr (mr.key)}
-        <div class={['card', getOverallClass(mr), getApprovalClass(mr), getDiscussionClass(mr), getCiClass(mr)]}>
+        <div
+            class={[
+                'card',
+                `role-${role}`,
+                getOverallClass(mr),
+                getApprovalClass(mr),
+                getDiscussionClass(mr),
+                getCiClass(mr)
+            ]}
+        >
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="content" onclick={() => window.open(mr.webUrl, '_blank')}>
@@ -53,7 +67,7 @@
                 <div class="footer">
                     <p>
                         {mr.reference} · {moment(mr.createdAt).fromNow()}
-                        {#if showAuthor}
+                        {#if role == 'reviewer'}
                             by {mr.authorName}
                         {/if}
                     </p>
@@ -88,28 +102,60 @@
         text-align: center;
     }
 
-    .approved {
-        --approval-color: lightgreen;
-    }
-    .not-approved {
-        --approval-color: lightgray;
+    :root {
+        --status-good: lightgreen;
+        --status-my-action: lightblue;
+        --status-others-action: lightgray;
+        --status-not-ready: lightgray;
+        --status-broken: tomato;
     }
 
-    .open-discussions {
-        --discussions-color: blue;
+    // If it's approved, that's always good
+    .approved {
+        --approval-color: var(--status-good);
     }
-    .no-open-discussions {
-        --discussions-color: lightgreen;
+    // If we're the assignee, it's always up to the reviewer to approve
+    .role-assignee.not-approved,
+    .role-assignee.ready-for-approval {
+        --approval-color: var(--status-others-action);
+    }
+    // If we're the reviewer, it's our action if everything else is ready for approval
+    .role-reviewer.not-approved {
+        --approval-color: var(--status-not-ready);
+    }
+    .role-reviewer.ready-for-approval {
+        --approval-color: var(--status-my-action);
+    }
+
+    // If it's approved (and there are no open discussions), then we're not expecting any more discussions
+    .approved.no-open-discussions {
+        --discussions-color: var(--status-good);
+    }
+    // If we're the assignee, then we only need to take action if there are open discussions
+    .role-assignee.no-open-discussions {
+        --discussions-color: var(--status-good);
+    }
+    .role-assignee.open-discussions {
+        --discussions-color: var(--status-my-action);
+    }
+    // If we're the reviewer, its our responsibility to open discussions and check the status of open discussions
+    .role-reviewer.no-open-discussions,
+    .role-reviewer.open-discussions {
+        --discussions-color: var(--status-my-action);
     }
 
     .ci-success {
-        --ci-color: lightgreen;
+        --ci-color: var(--status-good);
     }
-    .ci-failed {
-        --ci-color: red;
+    // If we're the assignee it's our responsibility to fix broken CI. If we're reviewing, it's the assignee's
+    .role-assignee.ci-failed {
+        --ci-color: var(--status-broken);
+    }
+    .role-reviewer.ci-failed {
+        --ci-color: var(--status-others-action);
     }
     .ci-pending {
-        --ci-color: lightgray;
+        --ci-color: var(--status-others-action);
     }
 
     .overall-approval {
@@ -144,14 +190,15 @@
         grid-template-rows: 1fr 1fr 1fr;
         color: black;
         width: 30px;
+        font-size: 0.95rem;
 
         a {
             color: black;
         }
 
         div {
-            min-height: 25px;
-            /* Center icons in bubble */
+            padding: 0.5px;
+            // Center icons in bubble
             display: flex;
             justify-content: center;
             align-items: center;

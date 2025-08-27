@@ -25,11 +25,11 @@
     <div class="table-container">
         <div>
             <h2>Assigned</h2>
-            <MergeRequestTable mergeRequests={client.assigned ?? []} />
+            <MergeRequestTable mergeRequests={client.assigned ?? []} role="assignee" />
         </div>
         <div>
             <h2>Reviewing</h2>
-            <MergeRequestTable mergeRequests={client.reviewing ?? []} showAuthor={true} />
+            <MergeRequestTable mergeRequests={client.reviewing ?? []} role="reviewer" />
         </div>
     </div>
 {/if}

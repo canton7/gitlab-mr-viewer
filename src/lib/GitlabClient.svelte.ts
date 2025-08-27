@@ -8,7 +8,7 @@ import {
     type MergeRequestSchemaWithBasicLabels
 } from '@gitbeaker/core';
 
-const UPDATE_PERIOD_MS = 5 * 60 * 1000;
+const UPDATE_PERIOD_MS = 1 * 60 * 1000;
 
 export type GitlabCiStatus = CommitablePipelineStatus | 'none';
 
@@ -85,11 +85,10 @@ export class GitlabClient {
         let resolved = 0;
         for (const discussion of discussions) {
             for (const note of discussion.notes ?? []) {
-                if (note.resolvable) {
-                    resolvable += 1;
-                }
                 if (note.resolved) {
                     resolved += 1;
+                } else if (note.resolvable) {
+                    resolvable += 1;
                 }
             }
         }
