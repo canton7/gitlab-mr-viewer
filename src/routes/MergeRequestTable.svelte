@@ -127,10 +127,6 @@
         --approval-color: var(--status-my-action);
     }
 
-    // If it's approved (and there are no open discussions), then we're not expecting any more discussions
-    .approved.no-open-discussions {
-        --discussions-color: var(--status-good);
-    }
     // If we're the assignee, then we only need to take action if there are open discussions
     .role-assignee.no-open-discussions {
         --discussions-color: var(--status-good);
@@ -138,10 +134,13 @@
     .role-assignee.open-discussions {
         --discussions-color: var(--status-my-action);
     }
-    // If we're the reviewer, its our responsibility to open discussions and check the status of open discussions
     .role-reviewer.no-open-discussions,
     .role-reviewer.open-discussions {
         --discussions-color: var(--status-my-action);
+    }
+    // If it's approved (and there are no open discussions), then we're not expecting any more discussions
+    .role-reviewer.no-open-discussions.approved {
+        --discussions-color: var(--status-good);
     }
 
     .ci-success {
