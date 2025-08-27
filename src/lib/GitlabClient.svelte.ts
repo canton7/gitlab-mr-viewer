@@ -162,7 +162,7 @@ gitlabSettings.subscribe((settings) => {
         gitlabClient.setApi(null);
     } else {
         const api = new Gitlab({
-            host: settings.baseUrl,
+            host: 'https://' + settings.baseUrl,
             token: settings.accessToken
         });
         gitlabClient.setApi(api);
