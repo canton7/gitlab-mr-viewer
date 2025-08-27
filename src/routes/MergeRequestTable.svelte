@@ -183,17 +183,26 @@
         row-gap: 8px;
         padding: 5px 8px;
         cursor: pointer;
+
+        a {
+            color: var(--bs-body-color);
+            text-decoration: none;
+
+            &:hover {
+                text-decoration: underline;
+            }
+        }
     }
 
     .bubbles {
         display: grid;
         grid-template-rows: 1fr 1fr 1fr;
-        color: black;
+        color: var(--bs-body-color);
         width: 30px;
         font-size: 0.95rem;
 
         a {
-            color: black;
+            color: var(--bs-body-color);
         }
 
         div {
