@@ -13,7 +13,7 @@
         if (mr.ciStatus != 'none' && mr.ciStatus != 'success') {
             return 'overall-ci';
         }
-        if (mr.totalDiscussions != mr.resolvedDiscussions) {
+        if (mr.openDiscussions > 0) {
             return 'overall-discussions';
         }
         return 'overall-approval';
@@ -23,14 +23,14 @@
         if (mr.isApproved) {
             return 'approved';
         }
-        if (mr.totalDiscussions == mr.resolvedDiscussions) {
+        if (mr.openDiscussions == 0) {
             return 'ready-for-approval';
         }
         return 'not-approved';
     }
 
     function getDiscussionClass(mr: MergeRequest) {
-        return mr.totalDiscussions == mr.resolvedDiscussions ? 'no-open-discussions' : 'open-discussions';
+        return mr.openDiscussions == 0 ? 'no-open-discussions' : 'open-discussions';
     }
 
     function getCiClass(mr: MergeRequest) {
@@ -79,8 +79,8 @@
                     <i class="fa-regular fa-circle-check"></i>
                 </div>
                 <div class="discussions">
-                    {#if mr.totalDiscussions != mr.resolvedDiscussions}
-                        {mr.totalDiscussions - mr.resolvedDiscussions}
+                    {#if mr.openDiscussions > 0}
+                        {mr.openDiscussions}
                     {:else}
                         <i class="fa-solid fa-list-check"></i>
                     {/if}
