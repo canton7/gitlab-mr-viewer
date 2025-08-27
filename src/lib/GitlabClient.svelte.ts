@@ -84,12 +84,15 @@ export class GitlabClient {
         let resolvable = 0;
         let totalDiscussions = 0;
         for (const discussion of discussions) {
-            for (const note of discussion.notes ?? []) {
-                if (note.resolvable && !note.resolved) {
-                    resolvable += 1;
-                }
-                if (note.resolvable || note.resolved) {
-                    totalDiscussions += 1;
+            // Each note corresponds to a comment in the current discussion thread
+            // I *think* they should all have the same resolved/resolvable status
+            if (discussion.notes != undefined && discussion.notes.length > 0) {
+                const note = discussion.notes[0];
+                if (note.resolvable) {
+                    totalDiscussions++;
+                    if (!note.resolved) {
+                        resolvable++;
+                    }
                 }
             }
         }
