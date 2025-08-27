@@ -198,14 +198,15 @@
         grid-template-rows: 1fr 1fr 1fr;
         color: var(--bs-body-color);
         width: 30px;
-        font-size: 0.95rem;
+        line-height: 0; // Override bootstrap style on links
+        font-size: 0.8rem;
 
         a {
             color: var(--bs-body-color);
         }
 
         div {
-            padding: 0.5px;
+            padding: 3px;
             // Center icons in bubble
             display: flex;
             justify-content: center;
