@@ -21,7 +21,7 @@ export interface MergeRequest {
     authorName: string;
     reference: string;
     isApproved: boolean;
-    resolvedDiscussions: number;
+    openDiscussions: number;
     totalDiscussions: number;
     ciStatus: GitlabCiStatus;
     ciLink: string | null;
@@ -82,13 +82,14 @@ export class GitlabClient {
         ]);
 
         let resolvable = 0;
-        let resolved = 0;
+        let totalDiscussions = 0;
         for (const discussion of discussions) {
             for (const note of discussion.notes ?? []) {
-                if (note.resolved) {
-                    resolved += 1;
-                } else if (note.resolvable) {
+                if (note.resolvable && !note.resolved) {
                     resolvable += 1;
+                }
+                if (note.resolvable || note.resolved) {
+                    totalDiscussions += 1;
                 }
             }
         }
@@ -102,8 +103,8 @@ export class GitlabClient {
             authorName: merge_request.author.name,
             reference: merge_request.references.full.split('/').at(-1) ?? '',
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
-            resolvedDiscussions: resolved,
-            totalDiscussions: resolvable,
+            openDiscussions: resolvable,
+            totalDiscussions: totalDiscussions,
             ciStatus: commitStatus.at(0)?.status ?? 'none',
             ciLink: commitStatus.at(0)?.target_url ?? null
         };
