@@ -25,7 +25,10 @@
 <form use:enhance={save} method="POST">
     <div class="mb-3">
         <label for="baseUrl" class="form-label">GitLab URL</label>
-        <input name="baseUrl" class="form-control" required value={$gitlabSettings.baseUrl} />
+        <div class="input-group">
+            <span class="input-group-text">https://</span>
+            <input name="baseUrl" class="form-control" required value={$gitlabSettings.baseUrl} />
+        </div>
         <div class="form-text">Don't include 'rest/api' etc</div>
     </div>
 
