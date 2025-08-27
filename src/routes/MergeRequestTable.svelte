@@ -107,7 +107,7 @@
         --status-my-action: lightblue;
         --status-others-action: lightgray;
         --status-not-ready: lightgray;
-        --status-broken: tomato;
+        --status-broken: lightsalmon;
     }
 
     // If it's approved, that's always good
@@ -173,7 +173,7 @@
         overflow: hidden;
         margin-bottom: 15px;
         border: 1px solid var(--overall-color);
-        box-shadow: 0 0 8px 1px color-mix(in srgb, var(--overall-color) 80%, transparent);
+        box-shadow: 0 0 4px 1px color-mix(in srgb, var(--overall-color) 60%, transparent);
     }
 
     .content {
