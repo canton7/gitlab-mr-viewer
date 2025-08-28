@@ -107,7 +107,7 @@
         --status-my-action: lightblue;
         --status-others-action: lightgray;
         --status-not-ready: lightgray;
-        --status-broken: lightsalmon;
+        --status-broken: #ff8787;
     }
 
     // If it's approved, that's always good
