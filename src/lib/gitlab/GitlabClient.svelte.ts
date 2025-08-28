@@ -25,6 +25,7 @@ export interface MergeRequest {
     authorName: string;
     reference: string;
     isApproved: boolean;
+    firstOpenNoteId: number | null;
     openDiscussions: number;
     totalDiscussions: number;
     ciStatus: GitlabCiStatus;
@@ -87,6 +88,7 @@ export class GitlabClient {
 
         let resolvable = 0;
         let totalDiscussions = 0;
+        let firstOpenNoteId = null;
         for (const discussion of discussions) {
             // Each note corresponds to a comment in the current discussion thread
             // I *think* they should all have the same resolved/resolvable status
@@ -95,6 +97,7 @@ export class GitlabClient {
                 if (note.resolvable) {
                     totalDiscussions++;
                     if (!note.resolved) {
+                        firstOpenNoteId = note.id;
                         resolvable++;
                     }
                 }
@@ -110,6 +113,7 @@ export class GitlabClient {
             authorName: merge_request.author.name,
             reference: merge_request.references.full.split('/').at(-1) ?? '',
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
+            firstOpenNoteId: firstOpenNoteId,
             openDiscussions: resolvable,
             totalDiscussions: totalDiscussions,
             ciStatus: commitStatus.at(0)?.status ?? 'none',

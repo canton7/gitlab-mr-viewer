@@ -84,14 +84,14 @@
                 </div>
                 <div class="discussions">
                     {#if mr.openDiscussions > 0}
-                        {mr.openDiscussions}
+                        <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank">{mr.openDiscussions}</a>
                     {:else}
                         <i class="fa-solid fa-list-check"></i>
                     {/if}
                 </div>
                 <div class="ci">
                     {#if mr.ciLink}
-                        <a href={mr.ciLink} aria-label="CI Status"><i class="fa-solid fa-robot"></i></a>
+                        <a href={mr.ciLink} target="_blank" aria-label="CI Status"><i class="fa-solid fa-robot"></i></a>
                     {:else}
                         <i class="fa-solid fa-robot"></i>
                     {/if}
@@ -207,10 +207,17 @@
 
         a {
             color: var(--bs-body-color);
+            text-decoration: none;
+            width: 100%;
+            height: 100%;
         }
 
         div {
             padding: 3px;
+        }
+
+        div,
+        a {
             // Center icons in bubble
             display: flex;
             justify-content: center;
