@@ -1,6 +1,8 @@
 <script lang="ts">
     import type { MergeRequest } from '$lib/gitlab/GitlabClient.svelte';
     import moment from 'moment';
+    import { flip } from 'svelte/animate';
+    import { fade, fly } from 'svelte/transition';
 
     interface Props {
         mergeRequests: MergeRequest[];
@@ -51,6 +53,8 @@
 <div class="merge-request-table">
     {#each mergeRequests as mr (mr.key)}
         <div
+            animate:flip
+            transition:fade
             class={[
                 'card',
                 `role-${role}`,
