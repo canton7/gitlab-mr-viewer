@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { gitlabClient as client } from '$lib/GitlabClient.svelte';
+    import { gitlabClient as client } from '$lib/gitlab/GitlabClient.svelte';
     import type { PageProps } from './$types';
     import MergeRequestTable from './MergeRequestTable.svelte';
     import { resolve } from '$app/paths';
