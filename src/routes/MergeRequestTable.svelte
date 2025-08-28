@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { MergeRequest } from '$lib/GitlabClient.svelte';
+    import type { MergeRequest } from '$lib/gitlab/GitlabClient.svelte';
     import moment from 'moment';
 
     interface Props {

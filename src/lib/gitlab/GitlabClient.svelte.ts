@@ -7,8 +7,12 @@ import {
     type ExpandedUserSchema,
     type MergeRequestSchemaWithBasicLabels
 } from '@gitbeaker/core';
+import { createRequesterFn, type RequestOptions, type ResourceOptions } from '@gitbeaker/requester-utils';
+import { createRequestHandler } from './GitlabUtils';
+import { GitlabCache } from './GitlabCache';
 
 const UPDATE_PERIOD_MS = 1 * 60 * 1000;
+const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
 
 export type GitlabCiStatus = CommitablePipelineStatus | 'none';
 
@@ -159,6 +163,11 @@ export class GitlabClient {
     }
 }
 
+const cache = new GitlabCache();
+setInterval(() => {
+    cache.flush(CACHE_FLUSH_PERIOD_MS);
+}, CACHE_FLUSH_PERIOD_MS);
+
 export const gitlabClient = new GitlabClient();
 gitlabSettings.subscribe((settings) => {
     if (!browser || !settings?.baseUrl || !settings?.accessToken) {
@@ -166,7 +175,11 @@ gitlabSettings.subscribe((settings) => {
     } else {
         const api = new Gitlab({
             host: 'https://' + settings.baseUrl,
-            token: settings.accessToken
+            token: settings.accessToken,
+            requesterFn: createRequesterFn(
+                (_: ResourceOptions, reqo: RequestOptions) => Promise.resolve(reqo),
+                createRequestHandler(cache)
+            )
         });
         gitlabClient.setApi(api);
     }
