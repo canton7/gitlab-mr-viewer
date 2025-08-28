@@ -10,7 +10,7 @@
     // let { data }: PageProps = $props();
 
     onMount(() => {
-        client?.start();
+        client.start();
 
         const removeListener = on(document, 'visibilitychange', () => {
             if (document.hidden) {
@@ -21,7 +21,7 @@
         });
 
         return () => {
-            client?.stop();
+            client.stop();
             removeListener();
         };
     });
