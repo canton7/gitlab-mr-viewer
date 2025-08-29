@@ -1,11 +1,17 @@
 <script lang="ts">
     import { resolve } from '$app/paths';
     import { page } from '$app/state';
+    import { onMount } from 'svelte';
     import favicon from '$lib/assets/favicon.svg';
-    import '$lib/styles/styles.scss';
     import '@fortawesome/fontawesome-free/css/all.min.css';
+    import '$lib/styles/styles.scss';
+    import { loadBootstrap } from '$lib/Bootstrap';
 
     let { children } = $props();
+
+    onMount(async () => {
+        await loadBootstrap();
+    });
 
     let navItems = [
         { title: 'Home', url: resolve('/') },

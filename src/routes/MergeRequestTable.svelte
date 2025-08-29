@@ -1,8 +1,10 @@
 <script lang="ts">
+    import { tooltip } from '$lib/Bootstrap';
     import type { MergeRequest } from '$lib/gitlab/GitlabClient.svelte';
+    import type { Tooltip } from 'bootstrap';
     import moment from 'moment';
     import { flip } from 'svelte/animate';
-    import { fade, fly } from 'svelte/transition';
+    import { fade } from 'svelte/transition';
 
     interface Props {
         mergeRequests: MergeRequest[];
@@ -31,8 +33,22 @@
         return 'not-approved';
     }
 
+    function getApprovalTooltip(mr: MergeRequest) {
+        return mr.isApproved ? 'Approved' : 'Not approved';
+    }
+
     function getDiscussionClass(mr: MergeRequest) {
         return mr.openDiscussions == 0 ? 'no-open-discussions' : 'open-discussions';
+    }
+
+    function getDiscussionTooltip(mr: MergeRequest) {
+        if (mr.totalDiscussions == 0) {
+            return 'No threads';
+        }
+        if (mr.totalDiscussions == mr.openDiscussions) {
+            return 'All threads resolved';
+        }
+        return `Unresolved threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
     }
 
     function getCiClass(mr: MergeRequest) {
@@ -44,6 +60,15 @@
         }
         return 'ci-pending';
     }
+
+    function getCiTooltip(mr: MergeRequest) {
+        return `CI ${mr.ciStatus}`;
+    }
+
+    const tooltipOptions: Partial<Tooltip.Options> = {
+        placement: 'right',
+        delay: { show: 750, hide: 0 }
+    };
 </script>
 
 {#if mergeRequests.length == 0}
@@ -79,17 +104,17 @@
                 </div>
             </div>
             <div class="bubbles">
-                <div class="approval">
+                <div class="approval" {@attach tooltip({ title: getApprovalTooltip(mr), ...tooltipOptions })}>
                     <i class="fa-regular fa-circle-check"></i>
                 </div>
-                <div class="discussions">
+                <div class="discussions" {@attach tooltip({ title: getDiscussionTooltip(mr), ...tooltipOptions })}>
                     {#if mr.openDiscussions > 0}
                         <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank">{mr.openDiscussions}</a>
                     {:else}
                         <i class="fa-solid fa-list-check"></i>
                     {/if}
                 </div>
-                <div class="ci">
+                <div class="ci" {@attach tooltip({ title: getCiTooltip(mr), ...tooltipOptions })}>
                     {#if mr.ciLink}
                         <a href={mr.ciLink} target="_blank" aria-label="CI Status"><i class="fa-solid fa-robot"></i></a>
                     {:else}
