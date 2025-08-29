@@ -42,13 +42,17 @@
     }
 
     function getDiscussionTooltip(mr: MergeRequest) {
+        let title;
         if (mr.totalDiscussions == 0) {
-            return "No threads";
+            title = "No threads";
+        } else if (mr.openDiscussions == 0) {
+            title = "All threads resolved";
+        } else {
+            title = `Unresolved threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
         }
-        if (mr.totalDiscussions == mr.openDiscussions) {
-            return "All threads resolved";
-        }
-        return `Unresolved threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
+
+        const link = mr.firstOpenNoteId == null ? "" : "<br><em>Click to view</em>";
+        return title + link;
     }
 
     function getCiClass(mr: MergeRequest) {
@@ -62,12 +66,21 @@
     }
 
     function getCiTooltip(mr: MergeRequest) {
-        return `CI ${mr.ciStatus}`;
+        let title;
+        if (mr.ciStatus == "none") {
+            title = "No CI";
+        } else {
+            title = `CI ${mr.ciStatus}`;
+        }
+
+        const link = mr.ciLink == null ? "" : "<br><em>Click to view</em>";
+        return title + link;
     }
 
     const tooltipOptions: Partial<Tooltip.Options> = {
         placement: "right",
         delay: { show: 750, hide: 0 },
+        html: true,
     };
 </script>
 
