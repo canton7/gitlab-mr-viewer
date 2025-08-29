@@ -23,6 +23,7 @@ export interface MergeRequest {
     createdAt: string;
     updatedAt: string;
     authorName: string;
+    reviewerName: string | null;
     reference: string;
     isApproved: boolean;
     firstOpenNoteId: number | null;
@@ -111,6 +112,7 @@ export class GitlabClient {
             createdAt: merge_request.created_at,
             updatedAt: merge_request.updated_at,
             authorName: merge_request.author.name,
+            reviewerName: merge_request.reviewers?.at(0)?.name ?? null,
             reference: merge_request.references.full.split("/").at(-1) ?? "",
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
             firstOpenNoteId: firstOpenNoteId,

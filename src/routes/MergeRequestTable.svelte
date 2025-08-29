@@ -115,6 +115,8 @@
                         </span>
                         {#if role == "reviewer"}
                             by {mr.authorName}
+                        {:else if mr.reviewerName}
+                            to {mr.reviewerName}
                         {/if}
                     </p>
                     <p {@attach tooltip({ title: moment(mr.updatedAt).format(dateFormat) })}>
