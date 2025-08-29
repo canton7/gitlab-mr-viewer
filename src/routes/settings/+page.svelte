@@ -1,7 +1,7 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
     import type { SubmitFunction } from '@sveltejs/kit';
-    import { gitlabSettings } from '$lib/Settings.svelte';
+    import { gitlabSettings } from '$lib/Settings';
     import type { PageProps } from './$types';
     import { goto } from '$app/navigation';
     import { resolve } from '$app/paths';

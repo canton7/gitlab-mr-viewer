@@ -1,6 +1,6 @@
 import { Gitlab } from '@gitbeaker/rest';
 import { browser } from '$app/environment';
-import { gitlabSettings } from '$lib/Settings.svelte';
+import { gitlabSettings } from '$lib/Settings';
 import {
     Gitlab as CoreGitlab,
     type CommitablePipelineStatus,
