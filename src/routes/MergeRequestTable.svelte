@@ -112,18 +112,19 @@
     };
 
     const dateFormat = "ddd DD MMMM YYYY [at] h:mm:ss a";
+    const animationDuration = 800;
 </script>
 
 {#if mergeRequests.length == 0}
     <p class="caught-up">All caught up!</p>
 {/if}
 
-<div class="merge-request-table">
+<div class="merge-request-table" style:--animation-duration={`${animationDuration}ms`}>
     {#each mergeRequests as mr (mr.key)}
         <div
             class="card"
-            animate:flip
-            transition:fade
+            animate:flip={{ duration: animationDuration }}
+            transition:fade={{ duration: animationDuration }}
             style:--approval-color={`var(${getApprovalColor(mr)})`}
             style:--discussions-color={`var(${getDiscussionColor(mr)})`}
             style:--ci-color={`var(${getCiColor(mr)})`}
@@ -192,6 +193,9 @@
         margin-bottom: 15px;
         border: 1px solid var(--overall-color);
         box-shadow: 0 0 4px 1px color-mix(in srgb, var(--overall-color) 60%, transparent);
+        transition:
+            border box-shadow var(--animation-duration) ease,
+            box-shadow var(--animation-duration) ease;
     }
 
     .content {
@@ -236,6 +240,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            transition: background-color var(--animation-duration) ease;
         }
 
         .approval {
