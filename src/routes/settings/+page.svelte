@@ -30,7 +30,7 @@
     </div>
 
     <div class="mb-3">
-        <label for="accessToken" class="form-labeL">GitLab Personal Access Token</label>
+        <label for="accessToken" class="form-label">GitLab Personal Access Token</label>
         <input type="password" class="form-control" name="accessToken" required value={$gitlabSettings.accessToken} />
         <div class="form-text">This needs to have the read_api scope</div>
     </div>
