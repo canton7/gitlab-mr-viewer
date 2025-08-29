@@ -82,6 +82,8 @@
         delay: { show: 750, hide: 0 },
         html: true,
     };
+
+    const dateFormat = "ddd DD MMMM YYYY [at] h:mm:ss a";
 </script>
 
 {#if mergeRequests.length == 0}
@@ -107,12 +109,17 @@
                 <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
                 <div class="footer">
                     <p>
-                        {mr.reference} · {moment(mr.createdAt).fromNow()}
+                        {mr.reference} ·
+                        <span {@attach tooltip({ title: moment(mr.createdAt).format(dateFormat) })}>
+                            {moment(mr.createdAt).fromNow()}
+                        </span>
                         {#if role == "reviewer"}
                             by {mr.authorName}
                         {/if}
                     </p>
-                    <p>Updated {moment(mr.updatedAt).fromNow()}</p>
+                    <p {@attach tooltip({ title: moment(mr.updatedAt).format(dateFormat) })}>
+                        Updated {moment(mr.updatedAt).fromNow()}
+                    </p>
                 </div>
             </div>
             <div class="bubbles">

@@ -1,4 +1,7 @@
-@import "bootstrap/scss/bootstrap";
+@use "bootstrap/scss/bootstrap" with (
+    $tooltip-font-size: 0.8rem,
+    $tooltip-max-width: 300px
+);
 
 .navbar {
     --bs-navbar-padding-x: 1rem;
