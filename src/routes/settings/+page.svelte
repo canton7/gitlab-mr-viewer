@@ -1,18 +1,15 @@
 <script lang="ts">
-    import { enhance } from '$app/forms';
-    import type { SubmitFunction } from '@sveltejs/kit';
-    import { gitlabSettings } from '$lib/Settings';
-    import type { PageProps } from './$types';
-    import { goto } from '$app/navigation';
-    import { resolve } from '$app/paths';
-
-    // let { data }: PageProps = $props();
+    import { enhance } from "$app/forms";
+    import type { SubmitFunction } from "@sveltejs/kit";
+    import { gitlabSettings } from "$lib/Settings";
+    import { goto } from "$app/navigation";
+    import { resolve } from "$app/paths";
 
     const save: SubmitFunction = ({ formData, cancel }) => {
         cancel();
-        $gitlabSettings.baseUrl = formData.get('baseUrl') as string;
-        $gitlabSettings.accessToken = formData.get('accessToken') as string;
-        goto(resolve('/'));
+        $gitlabSettings.baseUrl = formData.get("baseUrl") as string;
+        $gitlabSettings.accessToken = formData.get("accessToken") as string;
+        goto(resolve("/"));
     };
 </script>
 

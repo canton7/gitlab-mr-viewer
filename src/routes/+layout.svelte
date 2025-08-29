@@ -1,11 +1,11 @@
 <script lang="ts">
-    import { resolve } from '$app/paths';
-    import { page } from '$app/state';
-    import { onMount } from 'svelte';
-    import favicon from '$lib/assets/favicon.svg';
-    import '@fortawesome/fontawesome-free/css/all.min.css';
-    import '$lib/styles/styles.scss';
-    import { loadBootstrap } from '$lib/Bootstrap';
+    import { resolve } from "$app/paths";
+    import { page } from "$app/state";
+    import { loadBootstrap } from "$lib/Bootstrap";
+    import favicon from "$lib/assets/favicon.svg";
+    import "$lib/styles/styles.scss";
+    import "@fortawesome/fontawesome-free/css/all.min.css";
+    import { onMount } from "svelte";
 
     let { children } = $props();
 
@@ -14,8 +14,8 @@
     });
 
     let navItems = [
-        { title: 'Home', url: resolve('/') },
-        { title: 'Settings', url: resolve('/settings') }
+        { title: "Home", url: resolve("/") },
+        { title: "Settings", url: resolve("/settings") },
     ];
 </script>
 
@@ -25,10 +25,10 @@
 
 <nav class="navbar navbar-expand navbar-light bg-light container-fluid">
     <div class="container-md">
-        <a class="navbar-brand" href={resolve('/')}>Merge Requests</a>
+        <a class="navbar-brand" href={resolve("/")}>Merge Requests</a>
 
         <div class="navbar-collapse navbar-nav">
-            {#each navItems as nav}
+            {#each navItems as nav (nav.title)}
                 <a class="nav-link" class:active={nav.url == page.url.pathname} href={nav.url}>{nav.title}</a>
             {/each}
         </div>

@@ -1,18 +1,15 @@
 <script lang="ts">
-    import { gitlabClient as client } from '$lib/gitlab/GitlabClient.svelte';
-    import type { PageProps } from './$types';
-    import MergeRequestTable from './MergeRequestTable.svelte';
-    import { resolve } from '$app/paths';
-    import { browser } from '$app/environment';
-    import { onMount } from 'svelte';
-    import { on } from 'svelte/events';
-
-    // let { data }: PageProps = $props();
+    import { browser } from "$app/environment";
+    import { resolve } from "$app/paths";
+    import { gitlabClient as client } from "$lib/gitlab/GitlabClient.svelte";
+    import MergeRequestTable from "./MergeRequestTable.svelte";
+    import { onMount } from "svelte";
+    import { on } from "svelte/events";
 
     onMount(() => {
         client.start();
 
-        const removeListener = on(document, 'visibilitychange', () => {
+        const removeListener = on(document, "visibilitychange", () => {
             if (document.hidden) {
                 client?.stop();
             } else {
@@ -31,11 +28,11 @@
     <title>Merge Requests</title>
 </svelte:head>
 
-{#if !browser || client.state.kind == 'loading'}
+{#if !browser || client.state.kind == "loading"}
     <p>Loading...</p>
-{:else if client.state.kind == 'unconfigured'}
-    <p>Configure in the <a href={resolve('/settings')}>Settings</a>.</p>
-{:else if client.state.kind == 'error'}
+{:else if client.state.kind == "unconfigured"}
+    <p>Configure in the <a href={resolve("/settings")}>Settings</a>.</p>
+{:else if client.state.kind == "error"}
     <p>Error: {client.state.error}</p>
 {:else}
     <div class="container">

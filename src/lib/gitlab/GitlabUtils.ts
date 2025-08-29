@@ -8,12 +8,12 @@ import {
     type FormattedResponse,
     type RequestHandlerFn,
     type RequestOptions,
-    type ResponseBodyTypes
-} from '@gitbeaker/requester-utils';
-import type { GitlabCache } from './GitlabCache';
+    type ResponseBodyTypes,
+} from "@gitbeaker/requester-utils";
+import type { GitlabCache } from "./GitlabCache";
 
 function getConditionalMode(endpoint: string) {
-    if (endpoint.includes('repository/archive')) return 'same-origin';
+    if (endpoint.includes("repository/archive")) return "same-origin";
     return undefined; // Default is 'cors'
 }
 
@@ -33,14 +33,14 @@ async function parseResponse(response: Response, asStream = false) {
 
 async function processBody(response: Response): Promise<ResponseBodyTypes> {
     // Split to remove potential charset info from the content type
-    const contentType = (response.headers.get('content-type') || '').split(';')[0].trim();
+    const contentType = (response.headers.get("content-type") || "").split(";")[0].trim();
 
-    if (contentType === 'application/json') {
+    if (contentType === "application/json") {
         return response.json().then((v) => v || {});
     }
 
-    if (contentType.startsWith('text/')) {
-        return response.text().then((t) => t || '');
+    if (contentType.startsWith("text/")) {
+        return response.text().then((t) => t || "");
     }
     return response.blob();
 }
@@ -53,14 +53,14 @@ function delay(ms: number) {
 
 async function throwFailedRequestError(request: Request, response: Response): Promise<GitbeakerRequestError> {
     const content = await response.text();
-    const contentType = response.headers.get('Content-Type');
+    const contentType = response.headers.get("Content-Type");
     let description: string;
 
-    if (contentType?.includes('application/json')) {
+    if (contentType?.includes("application/json")) {
         const output = JSON.parse(content);
-        const contentProperty = output?.error || output?.message || '';
+        const contentProperty = output?.error || output?.message || "";
 
-        description = typeof contentProperty === 'string' ? contentProperty : JSON.stringify(contentProperty);
+        description = typeof contentProperty === "string" ? contentProperty : JSON.stringify(contentProperty);
     } else {
         description = content;
     }
@@ -69,8 +69,8 @@ async function throwFailedRequestError(request: Request, response: Response): Pr
         cause: {
             description,
             request,
-            response
-        }
+            response,
+        },
     });
 }
 
@@ -86,20 +86,20 @@ export async function requestHandler(
     let lastStatus: number | undefined;
     let baseUrl: string | undefined;
 
-    if (prefixUrl) baseUrl = prefixUrl.endsWith('/') ? prefixUrl : `${prefixUrl}/`;
+    if (prefixUrl) baseUrl = prefixUrl.endsWith("/") ? prefixUrl : `${prefixUrl}/`;
 
     const url = new URL(endpoint, baseUrl);
 
-    url.search = searchParams || '';
+    url.search = searchParams || "";
 
     let cachedResponse = null;
-    if (method == 'GET') {
+    if (method == "GET") {
         cachedResponse = cache.get(url);
         if (cachedResponse != undefined) {
             if (opts.headers == undefined) {
                 opts.headers = {};
             }
-            opts.headers['If-None-Match'] = cachedResponse.etag;
+            opts.headers["If-None-Match"] = cachedResponse.etag;
         }
     }
 
@@ -108,13 +108,13 @@ export async function requestHandler(
 
     for (let i = 0; i < maxRetries; i += 1) {
         // We're doing our own caching: no point in the browser keeping its own cache
-        const request = new Request(url, { ...opts, method, mode, cache: 'no-store' });
+        const request = new Request(url, { ...opts, method, mode, cache: "no-store" });
 
         await rateLimit();
 
         const response = await fetch(request).catch((e) => {
-            if (e.name === 'TimeoutError' || e.name === 'AbortError') {
-                throw new GitbeakerTimeoutError('Query timeout was reached');
+            if (e.name === "TimeoutError" || e.name === "AbortError") {
+                throw new GitbeakerTimeoutError("Query timeout was reached");
             }
 
             throw e;
@@ -122,8 +122,8 @@ export async function requestHandler(
 
         if (response.ok) {
             const parsedResponse = await parseResponse(response, asStream);
-            if (method == 'GET') {
-                const etag = response.headers.get('ETag');
+            if (method == "GET") {
+                const etag = response.headers.get("ETag");
                 if (etag != null) {
                     cache.put(url, etag, parsedResponse.body);
                 }
@@ -133,7 +133,7 @@ export async function requestHandler(
             return {
                 body: cachedResponse.body,
                 headers: Object.fromEntries(response.headers.entries()),
-                status: response.status
+                status: response.status,
             };
         }
         if (!retryCodes.includes(response.status)) await throwFailedRequestError(request, response);
@@ -146,7 +146,7 @@ export async function requestHandler(
     }
 
     throw new GitbeakerRetryError(
-        `Could not successfully complete this request after ${maxRetries} retries, last status code: ${lastStatus}. ${lastStatus === 429 ? 'Check the applicable rate limits for this endpoint' : 'Verify the status of the endpoint'}.`
+        `Could not successfully complete this request after ${maxRetries} retries, last status code: ${lastStatus}. ${lastStatus === 429 ? "Check the applicable rate limits for this endpoint" : "Verify the status of the endpoint"}.`
     );
 }
 export function createRequestHandler(cache: GitlabCache): RequestHandlerFn {

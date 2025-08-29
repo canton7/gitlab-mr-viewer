@@ -1,5 +1,5 @@
-import { browser } from '$app/environment';
-import { writable } from 'svelte/store';
+import { browser } from "$app/environment";
+import { writable } from "svelte/store";
 
 function create<T>(name: string, defaultValue: T) {
     const state = writable<T>(defaultValue);
@@ -23,4 +23,4 @@ interface GitlabSettings {
     accessToken?: string;
 }
 
-export const gitlabSettings = create<GitlabSettings>('gitlabSettings', {});
+export const gitlabSettings = create<GitlabSettings>("gitlabSettings", {});
