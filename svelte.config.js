@@ -1,26 +1,26 @@
-import adapter from '@sveltejs/adapter-static';
-import { sveltePreprocess  } from 'svelte-preprocess';
+import adapter from "@sveltejs/adapter-static";
+import { sveltePreprocess } from "svelte-preprocess";
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
     preprocess: sveltePreprocess(),
     compilerOptions: {
-        runes: true
+        runes: true,
     },
     kit: {
         adapter: adapter({
             // default options are shown. On some platforms
             // these options are set automatically — see below
-            pages: 'build',
-            assets: 'build',
-            fallback: '404.html',
+            pages: "build",
+            assets: "build",
+            fallback: "404.html",
             precompress: false,
-            strict: true
+            strict: true,
         }),
         paths: {
-            base: process.argv.includes('dev') ? '' : process.env.BASE_PATH
-        }
-    }
+            base: process.argv.includes("dev") ? "" : process.env.BASE_PATH,
+        },
+    },
 };
 
 export default config;

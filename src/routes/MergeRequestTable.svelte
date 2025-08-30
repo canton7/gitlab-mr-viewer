@@ -1,64 +1,64 @@
 <script lang="ts">
-    import { tooltip } from '$lib/Bootstrap';
-    import type { MergeRequest } from '$lib/gitlab/GitlabClient.svelte';
-    import type { Tooltip } from 'bootstrap';
-    import moment from 'moment';
-    import { flip } from 'svelte/animate';
-    import { fade } from 'svelte/transition';
+    import { tooltip } from "$lib/Bootstrap";
+    import type { MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
+    import type { Tooltip } from "bootstrap";
+    import moment from "moment";
+    import { flip } from "svelte/animate";
+    import { fade } from "svelte/transition";
 
     interface Props {
         mergeRequests: MergeRequest[];
-        role: 'assignee' | 'reviewer';
+        role: "assignee" | "reviewer";
     }
 
     let { mergeRequests, role }: Props = $props();
 
     function getOverallClass(mr: MergeRequest) {
-        if (mr.ciStatus != 'none' && mr.ciStatus != 'success') {
-            return 'overall-ci';
+        if (mr.ciStatus != "none" && mr.ciStatus != "success") {
+            return "overall-ci";
         }
         if (mr.openDiscussions > 0) {
-            return 'overall-discussions';
+            return "overall-discussions";
         }
-        return 'overall-approval';
+        return "overall-approval";
     }
 
     function getApprovalClass(mr: MergeRequest) {
         if (mr.isApproved) {
-            return 'approved';
+            return "approved";
         }
         if (mr.openDiscussions == 0) {
-            return 'ready-for-approval';
+            return "ready-for-approval";
         }
-        return 'not-approved';
+        return "not-approved";
     }
 
     function getApprovalTooltip(mr: MergeRequest) {
-        return mr.isApproved ? 'Approved' : 'Not approved';
+        return mr.isApproved ? "Approved" : "Not approved";
     }
 
     function getDiscussionClass(mr: MergeRequest) {
-        return mr.openDiscussions == 0 ? 'no-open-discussions' : 'open-discussions';
+        return mr.openDiscussions == 0 ? "no-open-discussions" : "open-discussions";
     }
 
     function getDiscussionTooltip(mr: MergeRequest) {
         if (mr.totalDiscussions == 0) {
-            return 'No threads';
+            return "No threads";
         }
         if (mr.totalDiscussions == mr.openDiscussions) {
-            return 'All threads resolved';
+            return "All threads resolved";
         }
         return `Unresolved threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
     }
 
     function getCiClass(mr: MergeRequest) {
-        if (mr.ciStatus == 'success') {
-            return 'ci-success';
+        if (mr.ciStatus == "success") {
+            return "ci-success";
         }
-        if (mr.ciStatus == 'failed') {
-            return 'ci-failed';
+        if (mr.ciStatus == "failed") {
+            return "ci-failed";
         }
-        return 'ci-pending';
+        return "ci-pending";
     }
 
     function getCiTooltip(mr: MergeRequest) {
@@ -66,8 +66,8 @@
     }
 
     const tooltipOptions: Partial<Tooltip.Options> = {
-        placement: 'right',
-        delay: { show: 750, hide: 0 }
+        placement: "right",
+        delay: { show: 750, hide: 0 },
     };
 </script>
 
@@ -81,22 +81,21 @@
             animate:flip
             transition:fade
             class={[
-                'card',
+                "card",
                 `role-${role}`,
                 getOverallClass(mr),
                 getApprovalClass(mr),
                 getDiscussionClass(mr),
-                getCiClass(mr)
-            ]}
-        >
+                getCiClass(mr),
+            ]}>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="content" onclick={() => window.open(mr.webUrl, '_blank')}>
+            <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
                 <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
                 <div class="footer">
                     <p>
                         {mr.reference} · {moment(mr.createdAt).fromNow()}
-                        {#if role == 'reviewer'}
+                        {#if role == "reviewer"}
                             by {mr.authorName}
                         {/if}
                     </p>

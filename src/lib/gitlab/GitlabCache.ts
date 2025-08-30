@@ -1,4 +1,4 @@
-import { type ResponseBodyTypes } from '@gitbeaker/requester-utils';
+import { type ResponseBodyTypes } from "@gitbeaker/requester-utils";
 
 export interface CacheEntry {
     etag: string;

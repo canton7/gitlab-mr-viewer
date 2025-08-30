@@ -1,20 +1,20 @@
-import { Gitlab } from '@gitbeaker/rest';
-import { browser } from '$app/environment';
-import { gitlabSettings } from '$lib/Settings';
+import { Gitlab } from "@gitbeaker/rest";
+import { browser } from "$app/environment";
+import { gitlabSettings } from "$lib/Settings";
 import {
     Gitlab as CoreGitlab,
     type CommitablePipelineStatus,
     type ExpandedUserSchema,
-    type MergeRequestSchemaWithBasicLabels
-} from '@gitbeaker/core';
-import { createRequesterFn, type RequestOptions, type ResourceOptions } from '@gitbeaker/requester-utils';
-import { createRequestHandler } from './GitlabUtils';
-import { GitlabCache } from './GitlabCache';
+    type MergeRequestSchemaWithBasicLabels,
+} from "@gitbeaker/core";
+import { createRequesterFn, type RequestOptions, type ResourceOptions } from "@gitbeaker/requester-utils";
+import { createRequestHandler } from "./GitlabUtils";
+import { GitlabCache } from "./GitlabCache";
 
 const UPDATE_PERIOD_MS = 1 * 60 * 1000;
 const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
 
-export type GitlabCiStatus = CommitablePipelineStatus | 'none';
+export type GitlabCiStatus = CommitablePipelineStatus | "none";
 
 export interface MergeRequest {
     key: string;
@@ -32,14 +32,14 @@ export interface MergeRequest {
     ciLink: string | null;
 }
 
-type State = { kind: 'unconfigured' } | { kind: 'loading' } | { kind: 'loaded' } | { kind: 'error'; error: Error };
+type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" } | { kind: "error"; error: Error };
 
 export class GitlabClient {
     private _api: CoreGitlab | null = null;
     private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
 
-    private _state = $state<State>({ kind: 'unconfigured' });
+    private _state = $state<State>({ kind: "unconfigured" });
     assigned = $state<MergeRequest[]>([]);
     reviewing = $state<MergeRequest[]>([]);
 
@@ -48,12 +48,12 @@ export class GitlabClient {
 
         if (this._api) {
             this._user = this._api.Users.showCurrentUser();
-            this._state = { kind: 'loading' };
+            this._state = { kind: "loading" };
         } else {
             this._user = null;
             this.assigned = [];
             this.reviewing = [];
-            this._state = { kind: 'unconfigured' };
+            this._state = { kind: "unconfigured" };
         }
     }
 
@@ -80,10 +80,10 @@ export class GitlabClient {
     ): Promise<MergeRequest> {
         const [approvals, discussions, commitStatus] = await Promise.all([
             await api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
-                mergerequestIId: merge_request.iid
+                mergerequestIId: merge_request.iid,
             }),
             await api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid),
-            await api.Commits.allStatuses(merge_request.project_id, merge_request.sha)
+            await api.Commits.allStatuses(merge_request.project_id, merge_request.sha),
         ]);
 
         let resolvable = 0;
@@ -111,13 +111,13 @@ export class GitlabClient {
             createdAt: merge_request.created_at,
             updatedAt: merge_request.updated_at,
             authorName: merge_request.author.name,
-            reference: merge_request.references.full.split('/').at(-1) ?? '',
+            reference: merge_request.references.full.split("/").at(-1) ?? "",
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
             firstOpenNoteId: firstOpenNoteId,
             openDiscussions: resolvable,
             totalDiscussions: totalDiscussions,
-            ciStatus: commitStatus.at(0)?.status ?? 'none',
-            ciLink: commitStatus.at(0)?.target_url ?? null
+            ciStatus: commitStatus.at(0)?.status ?? "none",
+            ciLink: commitStatus.at(0)?.target_url ?? null,
         };
     }
 
@@ -132,9 +132,9 @@ export class GitlabClient {
 
         try {
             await action(this._api, (await this._user!).id);
-            this._state = { kind: 'loaded' };
+            this._state = { kind: "loaded" };
         } catch (err) {
-            this._state = { kind: 'error', error: err as Error };
+            this._state = { kind: "error", error: err as Error };
         }
     }
 
@@ -144,21 +144,21 @@ export class GitlabClient {
                 this.mapMergeRequests(
                     api,
                     api.MergeRequests.all({
-                        state: 'opened',
-                        scope: 'all',
+                        state: "opened",
+                        scope: "all",
                         reviewerId: userId,
-                        orderBy: 'updated_at'
+                        orderBy: "updated_at",
                     })
                 ),
                 this.mapMergeRequests(
                     api,
                     api.MergeRequests.all({
-                        state: 'opened',
-                        scope: 'all',
+                        state: "opened",
+                        scope: "all",
                         assigneeId: userId,
-                        orderBy: 'updated_at'
+                        orderBy: "updated_at",
                     })
-                )
+                ),
             ]);
 
             this.reviewing = reviewing;
@@ -178,12 +178,12 @@ gitlabSettings.subscribe((settings) => {
         gitlabClient.setApi(null);
     } else {
         const api = new Gitlab({
-            host: 'https://' + settings.baseUrl,
+            host: "https://" + settings.baseUrl,
             token: settings.accessToken,
             requesterFn: createRequesterFn(
                 (_: ResourceOptions, reqo: RequestOptions) => Promise.resolve(reqo),
                 createRequestHandler(cache)
-            )
+            ),
         });
         gitlabClient.setApi(api);
     }
