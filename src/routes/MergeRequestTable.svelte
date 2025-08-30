@@ -13,32 +13,45 @@
 
     let { mergeRequests, role }: Props = $props();
 
-    function getOverallClass(mr: MergeRequest) {
-        if (mr.ciStatus != "none" && mr.ciStatus != "success") {
-            return "overall-ci";
-        }
-        if (mr.openDiscussions > 0) {
-            return "overall-discussions";
-        }
-        return "overall-approval";
-    }
-
-    function getApprovalClass(mr: MergeRequest) {
+    function getApprovalColor(mr: MergeRequest) {
+        // If it's approved, that's always good
         if (mr.isApproved) {
-            return "approved";
+            return "--status-good";
         }
-        if (mr.openDiscussions == 0) {
-            return "ready-for-approval";
+        if (role == "assignee") {
+            // If we're the assignee, it's always up to the reviewer to approve
+            return "--status-others-action";
+        } else {
+            // If we're the reviewer, it's our action if everything else is ready for approval
+            if (mr.openDiscussions == 0) {
+                return "--status-my-action";
+            } else {
+                return "--status-not-ready";
+            }
         }
-        return "not-approved";
     }
 
     function getApprovalTooltip(mr: MergeRequest) {
         return mr.isApproved ? "Approved" : "Not approved";
     }
 
-    function getDiscussionClass(mr: MergeRequest) {
-        return mr.openDiscussions == 0 ? "no-open-discussions" : "open-discussions";
+    function getDiscussionColor(mr: MergeRequest) {
+        if (role == "assignee") {
+            // If we're the assignee, then we only need to take action if there are open discussions
+            if (mr.openDiscussions == 0) {
+                return "--status-good";
+            } else {
+                return "--status-my-action";
+            }
+        } else {
+            if (mr.isApproved && mr.openDiscussions == 0) {
+                // If it's approved (and there are no open discussions), then we're not expecting any more discussions
+                return "--status-good";
+            } else {
+                // Otherwise we're responsible for adding discussions as well as responding to them
+                return "--status-my-action";
+            }
+        }
     }
 
     function getDiscussionTooltip(mr: MergeRequest) {
@@ -48,21 +61,26 @@
         } else if (mr.openDiscussions == 0) {
             title = "All threads resolved";
         } else {
-            title = `Unresolved threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
+            title = `Open threads: ${mr.openDiscussions} / ${mr.totalDiscussions}`;
         }
 
         const link = mr.firstOpenNoteId == null ? "" : "<br><em>Click to view</em>";
         return title + link;
     }
 
-    function getCiClass(mr: MergeRequest) {
+    function getCiColor(mr: MergeRequest) {
         if (mr.ciStatus == "success") {
-            return "ci-success";
+            return "--status-good";
         }
+        // If we're the assignee it's our responsibility to fix broken CI. If we're reviewing, it's the assignee's
         if (mr.ciStatus == "failed") {
-            return "ci-failed";
+            if (role == "assignee") {
+                return "--status-broken";
+            } else {
+                return "--status-others-action";
+            }
         }
-        return "ci-pending";
+        return "--status-others-action";
     }
 
     function getCiTooltip(mr: MergeRequest) {
@@ -75,6 +93,16 @@
 
         const link = mr.ciLink == null ? "" : "<br><em>Click to view</em>";
         return title + link;
+    }
+
+    function getOverallColor(mr: MergeRequest) {
+        if (mr.ciStatus != "none" && mr.ciStatus != "success") {
+            return "--ci-color";
+        }
+        if (mr.openDiscussions > 0) {
+            return "--discussions-color";
+        }
+        return "--approval-color";
     }
 
     const tooltipOptions: Partial<Tooltip.Options> = {
@@ -93,16 +121,13 @@
 <div class="merge-request-table">
     {#each mergeRequests as mr (mr.key)}
         <div
+            class="card"
             animate:flip
             transition:fade
-            class={[
-                "card",
-                `role-${role}`,
-                getOverallClass(mr),
-                getApprovalClass(mr),
-                getDiscussionClass(mr),
-                getCiClass(mr),
-            ]}>
+            style:--approval-color={`var(${getApprovalColor(mr)})`}
+            style:--discussions-color={`var(${getDiscussionColor(mr)})`}
+            style:--ci-color={`var(${getCiColor(mr)})`}
+            style:--overall-color={`var(${getOverallColor(mr)})`}>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
@@ -158,63 +183,6 @@
         --status-others-action: lightgray;
         --status-not-ready: lightgray;
         --status-broken: #ff8787;
-    }
-
-    // If it's approved, that's always good
-    .approved {
-        --approval-color: var(--status-good);
-    }
-    // If we're the assignee, it's always up to the reviewer to approve
-    .role-assignee.not-approved,
-    .role-assignee.ready-for-approval {
-        --approval-color: var(--status-others-action);
-    }
-    // If we're the reviewer, it's our action if everything else is ready for approval
-    .role-reviewer.not-approved {
-        --approval-color: var(--status-not-ready);
-    }
-    .role-reviewer.ready-for-approval {
-        --approval-color: var(--status-my-action);
-    }
-
-    // If we're the assignee, then we only need to take action if there are open discussions
-    .role-assignee.no-open-discussions {
-        --discussions-color: var(--status-good);
-    }
-    .role-assignee.open-discussions {
-        --discussions-color: var(--status-my-action);
-    }
-    .role-reviewer.no-open-discussions,
-    .role-reviewer.open-discussions {
-        --discussions-color: var(--status-my-action);
-    }
-    // If it's approved (and there are no open discussions), then we're not expecting any more discussions
-    .role-reviewer.no-open-discussions.approved {
-        --discussions-color: var(--status-good);
-    }
-
-    .ci-success {
-        --ci-color: var(--status-good);
-    }
-    // If we're the assignee it's our responsibility to fix broken CI. If we're reviewing, it's the assignee's
-    .role-assignee.ci-failed {
-        --ci-color: var(--status-broken);
-    }
-    .role-reviewer.ci-failed {
-        --ci-color: var(--status-others-action);
-    }
-    .ci-pending {
-        --ci-color: var(--status-others-action);
-    }
-
-    .overall-approval {
-        --overall-color: var(--approval-color);
-    }
-    .overall-discussions {
-        --overall-color: var(--discussions-color);
-    }
-    .overall-ci {
-        --overall-color: var(--ci-color);
     }
 
     .card {
