@@ -3,6 +3,7 @@
     import { resolve } from "$app/paths";
     import { gitlabClient as client } from "$lib/gitlab/GitlabClient.svelte";
     import MergeRequestTable from "./MergeRequestTable.svelte";
+    import ActivityTable from "./ActivityTable.svelte";
     import { onMount } from "svelte";
     import { on } from "svelte/events";
 
@@ -47,6 +48,8 @@
             </div>
         </div>
     </div>
+
+    <ActivityTable activities={client.activities} />
 {/if}
 
 <style lang="scss">

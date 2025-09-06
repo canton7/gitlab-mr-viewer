@@ -20,8 +20,8 @@ export interface MergeRequest {
     key: string;
     title: string;
     webUrl: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: Date;
+    updatedAt: Date;
     authorName: string;
     reviewerName: string | null;
     reference: string;
@@ -31,6 +31,15 @@ export interface MergeRequest {
     totalDiscussions: number;
     ciStatus: GitlabCiStatus;
     ciLink: string | null;
+}
+
+export interface Activity {
+    key: string;
+    body: string;
+    updatedAt: Date;
+    noteId: number;
+    authorName: string;
+    mergeRequest: MergeRequest;
 }
 
 type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" } | { kind: "error"; error: Error };
@@ -43,6 +52,7 @@ export class GitlabClient {
     private _state = $state<State>({ kind: "unconfigured" });
     assigned = $state<MergeRequest[]>([]);
     reviewing = $state<MergeRequest[]>([]);
+    activities = $state<Activity[]>([]);
 
     setApi(api: CoreGitlab | null) {
         this._api = api;
@@ -54,6 +64,7 @@ export class GitlabClient {
             this._user = null;
             this.assigned = [];
             this.reviewing = [];
+            this.activities = [];
             this._state = { kind: "unconfigured" };
         }
     }
@@ -77,14 +88,19 @@ export class GitlabClient {
 
     private async mapMergeRequest(
         api: CoreGitlab,
-        merge_request: MergeRequestSchemaWithBasicLabels
-    ): Promise<MergeRequest> {
+        mergeRequest: MergeRequestSchemaWithBasicLabels
+    ): Promise<[MergeRequest, Activity[]]> {
         const [approvals, discussions, commitStatus] = await Promise.all([
-            await api.MergeRequestApprovals.showConfiguration(merge_request.project_id, {
-                mergerequestIId: merge_request.iid,
+            await api.MergeRequestApprovals.showConfiguration(mergeRequest.project_id, {
+                mergerequestIId: mergeRequest.iid,
             }),
-            await api.MergeRequestDiscussions.all(merge_request.project_id, merge_request.iid),
-            await api.Commits.allStatuses(merge_request.project_id, merge_request.sha),
+            await api.MergeRequestDiscussions.all(mergeRequest.project_id, mergeRequest.iid, {
+                pagination: "keyset",
+                sort: "desc",
+                orderBy: "updated_at",
+                perPage: 50,
+            }),
+            await api.Commits.allStatuses(mergeRequest.project_id, mergeRequest.sha),
         ]);
 
         let resolvable = 0;
@@ -105,15 +121,15 @@ export class GitlabClient {
             }
         }
 
-        return {
-            key: `${merge_request.project_id}-${merge_request.id}`,
-            title: merge_request.title,
-            webUrl: merge_request.web_url,
-            createdAt: merge_request.created_at,
-            updatedAt: merge_request.updated_at,
-            authorName: merge_request.author.name,
-            reviewerName: merge_request.reviewers?.at(0)?.name ?? null,
-            reference: merge_request.references.full.split("/").at(-1) ?? "",
+        const mr: MergeRequest = {
+            key: `${mergeRequest.project_id}-${mergeRequest.id}`,
+            title: mergeRequest.title,
+            webUrl: mergeRequest.web_url,
+            createdAt: new Date(mergeRequest.created_at),
+            updatedAt: new Date(mergeRequest.updated_at),
+            authorName: mergeRequest.author.name,
+            reviewerName: mergeRequest.reviewers?.at(0)?.name ?? null,
+            reference: mergeRequest.references.full.split("/").at(-1) ?? "",
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
             firstOpenNoteId: firstOpenNoteId,
             openDiscussions: resolvable,
@@ -121,10 +137,36 @@ export class GitlabClient {
             ciStatus: commitStatus.at(0)?.status ?? "none",
             ciLink: commitStatus.at(0)?.target_url ?? null,
         };
+
+        let activities: Activity[] = [];
+        for (const discussion of discussions) {
+            if (discussion.notes != undefined && discussion.notes.length > 0) {
+                let body;
+                if (discussion.individual_note) {
+                    body = discussion.notes[0].body;
+                } else {
+                    body = `left ${discussion.notes.length} comment(s)`;
+                }
+                activities.push({
+                    key: discussion.id,
+                    body: body,
+                    updatedAt: new Date(discussion.notes[0].updated_at),
+                    noteId: discussion.notes[0].id,
+                    authorName: discussion.notes[0].author.name,
+                    mergeRequest: mr,
+                });
+            }
+        }
+
+        return [mr, activities];
     }
 
-    private async mapMergeRequests(api: CoreGitlab, merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>) {
-        return await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(api, x)));
+    private async mapMergeRequests(
+        api: CoreGitlab,
+        merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>
+    ): Promise<[MergeRequest[], Activity[]]> {
+        const results = await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(api, x)));
+        return [results.map((x) => x[0]), results.flatMap((x) => x[1])];
     }
 
     private async doRequest(action: (api: CoreGitlab, userId: number) => Promise<void>) {
@@ -142,7 +184,7 @@ export class GitlabClient {
 
     private async loadAsync() {
         await this.doRequest(async (api, userId) => {
-            const [reviewing, assigned] = await Promise.all([
+            const [[reviewing, reviewingActivity], [assigned, assignedActivity]] = await Promise.all([
                 this.mapMergeRequests(
                     api,
                     api.MergeRequests.all({
@@ -165,6 +207,17 @@ export class GitlabClient {
 
             this.reviewing = reviewing;
             this.assigned = assigned;
+
+            // We might have duplicates (if an MR appears in both reviewing and assigned). That's OK.
+            let activitiesLookup = new Map<string, Activity>();
+            for (const activity of reviewingActivity.concat(assignedActivity)) {
+                activitiesLookup.set(activity.key, activity);
+            }
+            // TODO: Sort
+            this.activities = activitiesLookup
+                .values()
+                .toArray()
+                .sort((x, y) => y.updatedAt.getTime() - x.updatedAt.getTime());
         });
     }
 }
