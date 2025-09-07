@@ -1,5 +1,7 @@
 <script lang="ts">
+    import { tooltip } from "$lib/Bootstrap";
     import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
+    import { DATE_FORMAT, now } from "$lib/DateUtils";
     import moment from "moment";
 
     interface Props {
@@ -9,68 +11,128 @@
     let { activities }: Props = $props();
 </script>
 
+{#snippet details(activity: Activity)}
+    {@const url = `${activity.mergeRequest.webUrl}#note_${activity.noteId}`}
+    <p>
+        <a href={url} target="_blank">
+            {activity.authorName}
+            {activity.body}
+        </a>
+    </p>
+    <p class="footer">
+        {activity.mergeRequest.reference} ·
+        <span {@attach tooltip({ title: moment(activity.updatedAt).format(DATE_FORMAT) })}>
+            {moment(activity.updatedAt).from($now)}
+        </span>
+    </p>
+{/snippet}
+
 <div class="activity-table">
     {#each activities as activity, index (activity.key)}
-        <p>
-            {activity.mergeRequest.reference}: {activity.authorName}
-        </p>
-        <p class={["graphic", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
-            <span class="dot"></span>
+        <div class="details left">
+            {#if activity.mergeRequest.type == "assignee"}
+                {@render details(activity)}
+            {/if}
+        </div>
+
+        <div class={["timeline", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
+            <span class="dot-outer"><span class="dot-inner"></span></span>
             <span class="line"></span>
-        </p>
-        <p>{activity.body} {moment(activity.updatedAt).fromNow()}</p>
+        </div>
+
+        <div class="details">
+            {#if activity.mergeRequest.type == "reviewer"}
+                {@render details(activity)}
+            {/if}
+        </div>
     {/each}
 </div>
 
 <style lang="scss">
-    :root {
-        --dot-size: 8px;
-        --line-width: 2px;
-    }
+    @import "lib/styles/mixins.scss";
 
-    p {
-        margin-top: 0;
-        margin-bottom: 0;
+    :root {
+        --dot-outer-size: 8px;
+        --dot-inner-size: 4px;
+        --line-width: 2px;
+
+        --timeline-light: #ececef;
+        --timeline-dark: #737278;
     }
 
     .activity-table {
+        @include subtle-link;
+
         display: grid;
-        grid-template-columns: auto auto 1fr;
+        grid-template-columns: 1fr auto 1fr;
     }
 
-    .graphic {
-        position: relative;
+    p {
+        margin: 3px 0;
+        line-height: 1em;
+        font-size: 0.85em;
     }
 
-    .dot {
-        display: inline-block;
+    .left {
+        text-align: right;
+    }
+
+    .details {
+        margin: 2px 0;
+
+        .footer {
+            color: var(--footer-color);
+        }
+    }
+
+    .timeline {
         position: relative;
+        width: 30px;
+    }
+
+    .dot-outer {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         z-index: 3;
-        margin: 0 10px;
 
-        width: var(--dot-size);
-        height: var(--dot-size);
+        width: var(--dot-outer-size);
+        height: var(--dot-outer-size);
 
-        background-color: gray;
+        background-color: var(--timeline-light);
         border-radius: 50%;
-        vertical-align: middle;
+    }
+
+    .dot-inner {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+
+        width: var(--dot-inner-size);
+        height: var(--dot-inner-size);
+
+        background-color: var(--timeline-dark);
+        border-radius: 50%;
     }
 
     .line {
         position: absolute;
+        left: 50%;
+        transform: translate(-50%, 0);
         z-index: 2;
-        left: calc(50% - var(--line-width) / 2);
 
-        background-color: red;
+        background-color: var(--timeline-light);
         width: var(--line-width);
         height: 100%;
     }
 
     .first-row .line {
-        top: 50%;
+        top: calc(50% + var(--dot-outer-size) / 2);
     }
 
     .last-row .line {
-        bottom: 50%;
+        bottom: calc(50% - var(--dot-outer-size) / 2);
     }
 </style>

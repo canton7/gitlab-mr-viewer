@@ -1,6 +1,7 @@
 <script lang="ts">
     import { tooltip } from "$lib/Bootstrap";
     import type { MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
+    import { DATE_FORMAT, now } from "$lib/DateUtils";
     import type { Tooltip } from "bootstrap";
     import moment from "moment";
     import { flip } from "svelte/animate";
@@ -111,20 +112,19 @@
         html: true,
     };
 
-    const dateFormat = "ddd DD MMMM YYYY [at] h:mm:ss a";
-    const animationDuration = 800;
+    const ANIMATION_DURATION = 800;
 </script>
 
 {#if mergeRequests.length == 0}
     <p class="caught-up">All caught up!</p>
 {/if}
 
-<div class="merge-request-table" style:--animation-duration={`${animationDuration}ms`}>
+<div class="merge-request-table" style:--animation-duration={`${ANIMATION_DURATION}ms`}>
     {#each mergeRequests as mr (mr.key)}
         <div
             class="card"
-            animate:flip={{ duration: animationDuration }}
-            transition:fade={{ duration: animationDuration }}
+            animate:flip={{ duration: ANIMATION_DURATION }}
+            transition:fade={{ duration: ANIMATION_DURATION }}
             style:--approval-color={`var(${getApprovalColor(mr)})`}
             style:--discussions-color={`var(${getDiscussionColor(mr)})`}
             style:--ci-color={`var(${getCiColor(mr)})`}
@@ -135,9 +135,9 @@
                 <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
                 <div class="footer">
                     <p>
-                        {mr.reference} ·
-                        <span {@attach tooltip({ title: moment(mr.createdAt).format(dateFormat) })}>
-                            {moment(mr.createdAt).fromNow()}
+                        <span class="no-break">{mr.reference}</span> ·
+                        <span {@attach tooltip({ title: moment(mr.createdAt).format(DATE_FORMAT) })}>
+                            {moment(mr.createdAt).from($now)}
                         </span>
                         {#if role == "reviewer"}
                             by {mr.authorName}
@@ -145,8 +145,8 @@
                             to {mr.reviewerName}
                         {/if}
                     </p>
-                    <p {@attach tooltip({ title: moment(mr.updatedAt).format(dateFormat) })}>
-                        Updated {moment(mr.updatedAt).fromNow()}
+                    <p class="updated-at" {@attach tooltip({ title: moment(mr.updatedAt).format(DATE_FORMAT) })}>
+                        Updated {moment(mr.updatedAt).from($now)}
                     </p>
                 </div>
             </div>
@@ -174,6 +174,8 @@
 </div>
 
 <style lang="scss">
+    @import "lib/styles/mixins.scss";
+
     .caught-up {
         text-align: center;
     }
@@ -199,20 +201,13 @@
     }
 
     .content {
+        @include subtle-link;
+
         display: grid;
         grid-template-rows: 1fr auto;
         row-gap: 8px;
         padding: 5px 8px;
         cursor: pointer;
-
-        a {
-            color: var(--bs-body-color);
-            text-decoration: none;
-
-            &:hover {
-                text-decoration: underline;
-            }
-        }
     }
 
     .bubbles {
@@ -258,11 +253,21 @@
 
     .footer {
         display: flex;
+        align-items: flex-end;
         justify-content: space-between;
 
         p {
             margin-bottom: 0;
             font-size: 0.8rem;
+            text-wrap: balance;
+        }
+
+        .no-break {
+            white-space: nowrap;
+        }
+
+        .updated-at {
+            text-wrap: nowrap;
         }
     }
 </style>
