@@ -6,6 +6,7 @@
     import moment from "moment";
     import { flip } from "svelte/animate";
     import { fade } from "svelte/transition";
+    import { ANIMATION_DURATION } from "$lib/Const";
 
     interface Props {
         mergeRequests: MergeRequest[];
@@ -111,8 +112,6 @@
         delay: { show: 750, hide: 0 },
         html: true,
     };
-
-    const ANIMATION_DURATION = 800;
 </script>
 
 {#if mergeRequests.length == 0}
@@ -139,10 +138,11 @@
                         <span {@attach tooltip({ title: moment(mr.createdAt).format(DATE_FORMAT) })}>
                             {moment(mr.createdAt).from($now)}
                         </span>
+                        ·
                         {#if role == "reviewer"}
-                            by {mr.authorName}
+                            {mr.authorName}
                         {:else if mr.reviewerName}
-                            to {mr.reviewerName}
+                            {mr.reviewerName}
                         {/if}
                     </p>
                     <p class="updated-at" {@attach tooltip({ title: moment(mr.updatedAt).format(DATE_FORMAT) })}>
