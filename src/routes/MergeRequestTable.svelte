@@ -112,7 +112,7 @@
     };
 
     const dateFormat = "ddd DD MMMM YYYY [at] h:mm:ss a";
-    const animationDuration = 800;
+    const animationDuration = 8000;
 </script>
 
 {#if mergeRequests.length == 0}
@@ -155,11 +155,18 @@
                     <i class="fa-regular fa-circle-check"></i>
                 </div>
                 <div class="discussions" {@attach tooltip({ title: getDiscussionTooltip(mr), ...tooltipOptions })}>
-                    {#if mr.openDiscussions > 0}
-                        <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank">{mr.openDiscussions}</a>
-                    {:else}
-                        <i class="fa-solid fa-list-check"></i>
-                    {/if}
+                    {#key mr.openDiscussions}
+                        <div
+                            in:fade={{ duration: animationDuration / 2, delay: animationDuration / 2 }}
+                            out:fade={{ duration: animationDuration / 2 }}>
+                            {#if mr.openDiscussions > 0}
+                                <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank"
+                                    >{mr.openDiscussions}</a>
+                            {:else}
+                                <i class="fa-solid fa-list-check"></i>
+                            {/if}
+                        </div>
+                    {/key}
                 </div>
                 <div class="ci" {@attach tooltip({ title: getCiTooltip(mr), ...tooltipOptions })}>
                     {#if mr.ciLink}
@@ -230,7 +237,7 @@
             height: 100%;
         }
 
-        div {
+        & > div {
             padding: 3px;
         }
 
