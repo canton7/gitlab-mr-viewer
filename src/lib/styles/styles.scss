@@ -3,6 +3,10 @@
     $tooltip-max-width: 300px
 );
 
+:root {
+    --footer-color: gray;
+}
+
 .navbar {
     --bs-navbar-padding-x: 1rem;
 }
