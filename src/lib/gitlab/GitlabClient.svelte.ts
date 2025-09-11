@@ -1,3 +1,5 @@
+/* eslint-disable svelte/prefer-svelte-reactivity */
+
 import { Gitlab } from "@gitbeaker/rest";
 import { browser } from "$app/environment";
 import { gitlabSettings } from "$lib/Settings";
@@ -7,9 +9,7 @@ import {
     type DiscussionNoteSchema,
     type DiscussionSchema,
     type ExpandedUserSchema,
-    type MergeRequestDiscussionNoteSchema,
     type MergeRequestSchemaWithBasicLabels,
-    type UserSchema,
 } from "@gitbeaker/core";
 import { createRequesterFn, type RequestOptions, type ResourceOptions } from "@gitbeaker/requester-utils";
 import { createRequestHandler } from "./GitlabUtils";
@@ -158,9 +158,9 @@ export class GitlabClient {
         // Discussions are presented in as a list of threads, but each thread may have multiple comments left at
         // different times.
 
-        let activities: Activity[] = [];
+        const activities: Activity[] = [];
 
-        let commentNotes: DiscussionNoteSchema[] = [];
+        const commentNotes: DiscussionNoteSchema[] = [];
         // let resolvedNotes: MergeRequestDiscussionNoteSchema[] = [];
 
         for (const discussion of discussions) {
