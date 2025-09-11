@@ -3,6 +3,9 @@
     import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
     import { DATE_FORMAT, now } from "$lib/DateUtils";
     import moment from "moment";
+    import { ANIMATION_DURATION } from "$lib/Const";
+    import { flip } from "svelte/animate";
+    import { fade } from "svelte/transition";
 
     interface Props {
         activities: Activity[];
@@ -29,21 +32,26 @@
 
 <div class="activity-table">
     {#each activities as activity, index (activity.key)}
-        <div class="details left">
-            {#if activity.mergeRequest.type == "assignee"}
-                {@render details(activity)}
-            {/if}
-        </div>
+        <div
+            class="row"
+            animate:flip={{ duration: ANIMATION_DURATION }}
+            transition:fade={{ duration: ANIMATION_DURATION }}>
+            <div class="details left">
+                {#if activity.mergeRequest.type == "assignee"}
+                    {@render details(activity)}
+                {/if}
+            </div>
 
-        <div class={["timeline", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
-            <span class="dot-outer"><span class="dot-inner"></span></span>
-            <span class="line"></span>
-        </div>
+            <div class={["timeline", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
+                <span class="dot-outer"><span class="dot-inner"></span></span>
+                <span class="line"></span>
+            </div>
 
-        <div class="details">
-            {#if activity.mergeRequest.type == "reviewer"}
-                {@render details(activity)}
-            {/if}
+            <div class="details">
+                {#if activity.mergeRequest.type == "reviewer"}
+                    {@render details(activity)}
+                {/if}
+            </div>
         </div>
     {/each}
 </div>
@@ -65,6 +73,12 @@
 
         display: grid;
         grid-template-columns: 1fr auto 1fr;
+    }
+
+    .row {
+        display: grid;
+        grid-column: 1 / span 3;
+        grid-template-columns: subgrid;
     }
 
     p {

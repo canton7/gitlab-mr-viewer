@@ -39,7 +39,7 @@
     <div class="content">
         <div class="container">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6" style="overflow-y: scroll; height: 100%">
                     <h2>Assigned</h2>
                     <MergeRequestTable mergeRequests={client.assigned ?? []} role="assignee" />
                 </div>
@@ -50,9 +50,7 @@
             </div>
         </div>
 
-        <div class="activities">
-            <ActivityTable activities={client.activities} />
-        </div>
+        <ActivityTable activities={client.activities} />
     </div>
 {/if}
 
@@ -69,11 +67,14 @@
     }
 
     .container {
-        flex: 2;
-    }
+        height: 50vh;
 
-    .activities {
-        flex: 1;
-        overflow-y: scroll;
+        .row {
+            height: 100%;
+
+            & > div {
+                height: 100%;
+            }
+        }
     }
 </style>
