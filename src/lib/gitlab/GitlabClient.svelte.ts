@@ -225,7 +225,7 @@ export class GitlabClient {
                     key: `${synthesisedNoteType}-${current.firstNote.id}-${type}`,
                     body: messageGetter(current.count),
                     updatedAt: current.end,
-                    noteId: null,
+                    noteId: current.firstNote.id,
                     authorName: authorGetter(current.firstNote).name,
                     mergeRequest: mergeRequest,
                 });
@@ -261,7 +261,7 @@ export class GitlabClient {
             // The updated time gets updated when we resolve a comment, so we need to use the created time
             (note) => new Date(note.created_at),
             (note) => note.author,
-            (count) => `added ${count} comment(s)`
+            (count) => `added ${count} ${count == 1 ? "comment" : "comments"}`
         );
 
         // Then, resolving
