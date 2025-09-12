@@ -59,9 +59,9 @@ export class GitlabClient {
     private _intervalHandle: number | null = null;
 
     private _state = $state<State>({ kind: "unconfigured" });
-    assigned = $state<MergeRequest[]>([]);
-    reviewing = $state<MergeRequest[]>([]);
-    activities = $state<Activity[]>([]);
+    assigned = $state<MergeRequest[] | null>(null);
+    reviewing = $state<MergeRequest[] | null>(null);
+    activities = $state<Activity[] | null>(null);
 
     setApi(api: CoreGitlab | null) {
         this._api = api;
@@ -71,9 +71,9 @@ export class GitlabClient {
             this._state = { kind: "loading" };
         } else {
             this._user = null;
-            this.assigned = [];
-            this.reviewing = [];
-            this.activities = [];
+            this.assigned = null;
+            this.reviewing = null;
+            this.activities = null;
             this._state = { kind: "unconfigured" };
         }
     }
@@ -283,11 +283,20 @@ export class GitlabClient {
         }
 
         try {
+            this._state = { kind: "loading" };
             await action(this._api, (await this._user!).id);
             this._state = { kind: "loaded" };
         } catch (err) {
             this._state = { kind: "error", error: err as Error };
         }
+    }
+
+    public async refreshAsync() {
+        if (this._state.kind != "loaded" && this.state.kind != "error") {
+            return;
+        }
+
+        await this.loadAsync();
     }
 
     private async loadAsync() {
