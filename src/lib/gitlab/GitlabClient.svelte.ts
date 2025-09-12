@@ -57,6 +57,7 @@ export class GitlabClient {
     private _api: CoreGitlab | null = null;
     private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
+    private readonly _users: Map<string, Promise<string>> = new Map();
 
     private _state = $state<State>({ kind: "unconfigured" });
     assigned = $state<MergeRequest[] | null>(null);
@@ -66,14 +67,17 @@ export class GitlabClient {
     setApi(api: CoreGitlab | null) {
         this._api = api;
 
+        this._users.clear();
+        this.assigned = null;
+        this.reviewing = null;
+        this.activities = null;
+
         if (this._api) {
             this._user = this._api.Users.showCurrentUser();
             this._state = { kind: "loading" };
         } else {
             this._user = null;
-            this.assigned = null;
-            this.reviewing = null;
-            this.activities = null;
+
             this._state = { kind: "unconfigured" };
         }
     }
@@ -95,7 +99,7 @@ export class GitlabClient {
         }
     }
 
-    private async mapMergeRequest(
+    private async mapMergeRequestAsync(
         api: CoreGitlab,
         mergeRequest: MergeRequestSchemaWithBasicLabels,
         type: MergeRequestType
@@ -149,12 +153,17 @@ export class GitlabClient {
             ciLink: commitStatus.at(0)?.target_url ?? null,
         };
 
-        const activities = this.createActivities(type, discussions, mr);
+        const activities = await this.createActivitiesAsync(api, type, discussions, mr);
 
         return [mr, activities];
     }
 
-    private createActivities(type: MergeRequestType, discussions: DiscussionSchema[], mergeRequest: MergeRequest) {
+    private async createActivitiesAsync(
+        api: CoreGitlab,
+        type: MergeRequestType,
+        discussions: DiscussionSchema[],
+        mergeRequest: MergeRequest
+    ) {
         // Discussions are presented in as a list of threads, but each thread may have multiple comments left at
         // different times.
 
@@ -169,7 +178,9 @@ export class GitlabClient {
             }
 
             // These are things like system notifications, X added commits, etc
-            if (discussion.individual_note) {
+            // Filter to system comments, otherwise if someone leaves an individual non-review non-thread comment, that
+            // shows up here.
+            if (discussion.individual_note && discussion.notes[0].system) {
                 let body: string | null = discussion.notes[0].body.split("\n", 2)[0];
                 // We don't want to show this one
                 if (body == "left review comments") {
@@ -180,7 +191,7 @@ export class GitlabClient {
                     // It's technically possible for the same MR to show up in "reviewing" and "assigned"
                     activities.push({
                         key: `${discussion.id}-${type}`,
-                        body: body,
+                        body: await this.replaceUsernamesAsync(api, body),
                         updatedAt: new Date(discussion.notes[0].updated_at),
                         noteId: discussion.notes[0].id,
                         authorName: discussion.notes[0].author.name,
@@ -268,16 +279,65 @@ export class GitlabClient {
         return activities;
     }
 
-    private async mapMergeRequests(
+    private async mapMergeRequestsAsync(
         api: CoreGitlab,
         merge_requests: Promise<MergeRequestSchemaWithBasicLabels[]>,
         type: MergeRequestType
     ): Promise<[MergeRequest[], Activity[]]> {
-        const results = await Promise.all((await merge_requests).map((x) => this.mapMergeRequest(api, x, type)));
+        const results = await Promise.all((await merge_requests).map((x) => this.mapMergeRequestAsync(api, x, type)));
         return [results.map((x) => x[0]), results.flatMap((x) => x[1])];
     }
 
-    private async doRequest(action: (api: CoreGitlab, userId: number) => Promise<void>) {
+    private async lookupUserNameAsync<T extends { username: string }>(
+        api: CoreGitlab,
+        user: T
+    ): Promise<T & { name: string }> {
+        const queryName = async (username: string) => {
+            const user = await api.Users.all({ username: username });
+            console.log(user);
+            return user[0].name;
+        };
+
+        const currentUser = await this._user!;
+        if (user.username == currentUser.username) {
+            return { ...user, name: currentUser.name };
+        }
+
+        let namePromise = this._users.get(user.username);
+        if (namePromise === undefined) {
+            namePromise = queryName(user.username);
+            this._users.set(user.username, namePromise);
+        }
+
+        return { ...user, name: await namePromise };
+    }
+
+    private async replaceUsernamesAsync(api: CoreGitlab, input: string): Promise<string> {
+        const regex = /@(\w+)/g;
+
+        const matches = [];
+        let match;
+        while ((match = regex.exec(input)) !== null) {
+            matches.push({ username: match[1], position: match.index });
+        }
+
+        if (matches.length == 0) {
+            return input;
+        }
+
+        const repleacements = await Promise.all(matches.map((x) => this.lookupUserNameAsync(api, x)));
+
+        for (const replacement of repleacements.reverse()) {
+            input =
+                input.substring(0, replacement.position) +
+                replacement.name +
+                input.substring(replacement.position + replacement.username.length + 1);
+        }
+
+        return input;
+    }
+
+    private async doRequestAsync(action: (api: CoreGitlab, userId: number) => Promise<void>) {
         if (!this._api) {
             return;
         }
@@ -300,9 +360,9 @@ export class GitlabClient {
     }
 
     private async loadAsync() {
-        await this.doRequest(async (api, userId) => {
+        await this.doRequestAsync(async (api, userId) => {
             const [[reviewing, reviewingActivity], [assigned, assignedActivity]] = await Promise.all([
-                this.mapMergeRequests(
+                this.mapMergeRequestsAsync(
                     api,
                     api.MergeRequests.all({
                         state: "opened",
@@ -312,7 +372,7 @@ export class GitlabClient {
                     }),
                     "reviewer"
                 ),
-                this.mapMergeRequests(
+                this.mapMergeRequestsAsync(
                     api,
                     api.MergeRequests.all({
                         state: "opened",

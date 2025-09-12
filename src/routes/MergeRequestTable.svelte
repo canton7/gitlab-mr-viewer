@@ -11,9 +11,10 @@
     interface Props {
         mergeRequests: MergeRequest[] | null;
         role: "assignee" | "reviewer";
+        hoveredMergeRequest: MergeRequest | null;
     }
 
-    let { mergeRequests, role }: Props = $props();
+    let { mergeRequests, role, hoveredMergeRequest = $bindable(null) }: Props = $props();
 
     function getApprovalColor(mr: MergeRequest) {
         // If it's approved, that's always good
@@ -34,7 +35,10 @@
     }
 
     function getApprovalTooltip(mr: MergeRequest) {
-        return mr.isApproved ? "Approved" : "Not approved";
+        if (mr.isApproved) {
+            return "Approved";
+        }
+        return role == "reviewer" ? "Pending approval" : "Not approved";
     }
 
     function getDiscussionColor(mr: MergeRequest) {
@@ -127,6 +131,7 @@
     {/if}
 
     {#each mergeRequests ?? [] as mr (mr.key)}
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
             class="card"
             animate:flip={{ duration: ANIMATION_DURATION }}
@@ -137,7 +142,11 @@
             style:--overall-color={`var(${getOverallColor(mr)})`}>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
+            <div
+                class="content"
+                onclick={() => window.open(mr.webUrl, "_blank")}
+                onmouseenter={() => (hoveredMergeRequest = mr)}
+                onmouseleave={() => (hoveredMergeRequest = null)}>
                 <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
                 <div class="footer">
                     <p>

@@ -1,11 +1,13 @@
 <script lang="ts">
     import { browser } from "$app/environment";
     import { resolve } from "$app/paths";
-    import { gitlabClient as client } from "$lib/gitlab/GitlabClient.svelte";
+    import { gitlabClient as client, type MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
     import MergeRequestTable from "./MergeRequestTable.svelte";
     import ActivityTable from "./ActivityTable.svelte";
     import { onMount } from "svelte";
     import { on } from "svelte/events";
+
+    let hoveredMergeRequest: MergeRequest | null = $state.raw(null);
 
     onMount(() => {
         client.start();
@@ -39,7 +41,7 @@
             <div class="row">
                 <div class="col-md-6" style="overflow-y: scroll; height: 100%">
                     <h2>Assigned</h2>
-                    <MergeRequestTable mergeRequests={client.assigned} role="assignee" />
+                    <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:hoveredMergeRequest />
                 </div>
                 <div class="col-md-6">
                     <button class="refresh" aria-label="Refresh" onclick={() => client.refreshAsync()}>
@@ -47,12 +49,15 @@
                     </button>
 
                     <h2>Reviewing</h2>
-                    <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" />
+                    <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:hoveredMergeRequest />
                 </div>
             </div>
         </div>
 
-        <ActivityTable activities={client.activities ?? []} />
+        <ActivityTable
+            activities={(client.activities ?? []).filter(
+                (x) => hoveredMergeRequest == null || x.mergeRequest.key == hoveredMergeRequest.key
+            )} />
     </div>
 {/if}
 
