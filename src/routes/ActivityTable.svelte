@@ -3,9 +3,7 @@
     import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
     import { DATE_FORMAT, now } from "$lib/DateUtils";
     import moment from "moment";
-    import { ANIMATION_DURATION } from "$lib/Const";
-    import { flip } from "svelte/animate";
-    import { fade } from "svelte/transition";
+    import { slide } from "svelte/transition";
 
     interface Props {
         activities: Activity[];
@@ -32,10 +30,7 @@
 
 <div class="activity-table">
     {#each activities as activity, index (activity.key)}
-        <div
-            class="row"
-            animate:flip={{ duration: ANIMATION_DURATION }}
-            transition:fade={{ duration: ANIMATION_DURATION }}>
+        <div class="row" transition:slide={{ duration: 250 }}>
             <div class="details left">
                 {#if activity.mergeRequest.type == "assignee"}
                     {@render details(activity)}
@@ -148,5 +143,9 @@
 
     .last-row .line {
         bottom: calc(50% - var(--dot-outer-size) / 2);
+    }
+
+    .first-row.last-row .line {
+        display: none;
     }
 </style>
