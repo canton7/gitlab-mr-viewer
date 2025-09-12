@@ -9,7 +9,7 @@
     import { ANIMATION_DURATION } from "$lib/Const";
 
     interface Props {
-        mergeRequests: MergeRequest[];
+        mergeRequests: MergeRequest[] | null;
         role: "assignee" | "reviewer";
     }
 
@@ -114,12 +114,19 @@
     };
 </script>
 
-{#if mergeRequests.length == 0}
-    <p class="caught-up">All caught up!</p>
-{/if}
-
+<!-- We need to have this always shown, otherwise the cards don't animate in after a load -->
 <div class="merge-request-table" style:--animation-duration={`${ANIMATION_DURATION}ms`}>
-    {#each mergeRequests as mr (mr.key)}
+    {#if mergeRequests == null || mergeRequests.length == 0}
+        <p class="status" in:fade={{ duration: ANIMATION_DURATION, delay: ANIMATION_DURATION }}>
+            {#if mergeRequests == null}
+                Loading...
+            {:else}
+                All caught up!
+            {/if}
+        </p>
+    {/if}
+
+    {#each mergeRequests ?? [] as mr (mr.key)}
         <div
             class="card"
             animate:flip={{ duration: ANIMATION_DURATION }}
@@ -176,7 +183,17 @@
 <style lang="scss">
     @import "lib/styles/mixins.scss";
 
-    .caught-up {
+    .merge-request-table {
+        position: relative;
+    }
+
+    // Needs to be absolutely positioned on top of the cards, as despite its animation delay it gets added to the DOM
+    // straight away, while the cards are still fading out.
+    .status {
+        position: absolute;
+        top: 1em;
+        left: 0;
+        right: 0;
         text-align: center;
     }
 

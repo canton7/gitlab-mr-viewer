@@ -29,9 +29,7 @@
     <title>Merge Requests</title>
 </svelte:head>
 
-{#if !browser || client.state.kind == "loading"}
-    <p>Loading...</p>
-{:else if client.state.kind == "unconfigured"}
+{#if browser && client.state.kind == "unconfigured"}
     <p>Configure in the <a href={resolve("/settings")}>Settings</a>.</p>
 {:else if client.state.kind == "error"}
     <p>Error: {client.state.error}</p>
@@ -41,16 +39,20 @@
             <div class="row">
                 <div class="col-md-6" style="overflow-y: scroll; height: 100%">
                     <h2>Assigned</h2>
-                    <MergeRequestTable mergeRequests={client.assigned ?? []} role="assignee" />
+                    <MergeRequestTable mergeRequests={client.assigned} role="assignee" />
                 </div>
                 <div class="col-md-6">
+                    <button class="refresh" aria-label="Refresh" onclick={() => client.refreshAsync()}>
+                        <i class="fa-solid fa-arrows-rotate" class:fa-spin={client.state.kind == "loading"}></i>
+                    </button>
+
                     <h2>Reviewing</h2>
-                    <MergeRequestTable mergeRequests={client.reviewing ?? []} role="reviewer" />
+                    <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" />
                 </div>
             </div>
         </div>
 
-        <ActivityTable activities={client.activities} />
+        <ActivityTable activities={client.activities ?? []} />
     </div>
 {/if}
 
@@ -76,5 +78,12 @@
                 height: 100%;
             }
         }
+    }
+
+    .refresh {
+        float: right;
+        background: none;
+        border: none;
+        margin-top: 5px;
     }
 </style>
