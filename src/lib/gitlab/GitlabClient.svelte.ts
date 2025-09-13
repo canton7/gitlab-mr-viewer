@@ -313,7 +313,7 @@ export class GitlabClient {
     }
 
     private async replaceUsernamesAsync(api: CoreGitlab, input: string): Promise<string> {
-        const regex = /\b@(\w+)/g;
+        const regex = /(?<=\s|^)@(\w+)/g;
 
         const matches = [];
         let match;
