@@ -57,7 +57,7 @@ export class GitlabClient {
     private _api: CoreGitlab | null = null;
     private _user: Promise<ExpandedUserSchema> | null = null;
     private _intervalHandle: number | null = null;
-    private readonly _users: Map<string, Promise<string>> = new Map();
+    private readonly _users: Map<string, Promise<string | null>> = new Map();
 
     private _state = $state<State>({ kind: "unconfigured" });
     assigned = $state<MergeRequest[] | null>(null);
@@ -291,11 +291,11 @@ export class GitlabClient {
     private async lookupUserNameAsync<T extends { username: string }>(
         api: CoreGitlab,
         user: T
-    ): Promise<T & { name: string }> {
+    ): Promise<T & { name: string | null }> {
         const queryName = async (username: string) => {
             const user = await api.Users.all({ username: username });
             console.log(user);
-            return user[0].name;
+            return user.at(0)?.name ?? null;
         };
 
         const currentUser = await this._user!;
@@ -313,7 +313,7 @@ export class GitlabClient {
     }
 
     private async replaceUsernamesAsync(api: CoreGitlab, input: string): Promise<string> {
-        const regex = /@(\w+)/g;
+        const regex = /\b@(\w+)/g;
 
         const matches = [];
         let match;
@@ -325,13 +325,15 @@ export class GitlabClient {
             return input;
         }
 
-        const repleacements = await Promise.all(matches.map((x) => this.lookupUserNameAsync(api, x)));
+        const replacements = await Promise.all(matches.map((x) => this.lookupUserNameAsync(api, x)));
 
-        for (const replacement of repleacements.reverse()) {
-            input =
-                input.substring(0, replacement.position) +
-                replacement.name +
-                input.substring(replacement.position + replacement.username.length + 1);
+        for (const replacement of replacements.reverse()) {
+            if (replacement.name != null) {
+                input =
+                    input.substring(0, replacement.position) +
+                    replacement.name +
+                    input.substring(replacement.position + replacement.username.length + 1);
+            }
         }
 
         return input;
