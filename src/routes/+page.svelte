@@ -37,27 +37,33 @@
     <p>Error: {client.state.error}</p>
 {:else}
     <div class="content">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6" style="overflow-y: scroll; height: 100%">
-                    <h2>Assigned</h2>
-                    <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:hoveredMergeRequest />
-                </div>
-                <div class="col-md-6">
-                    <button class="refresh" aria-label="Refresh" onclick={() => client.refreshAsync()}>
-                        <i class="fa-solid fa-arrows-rotate" class:fa-spin={client.state.kind == "loading"}></i>
-                    </button>
+        <div class="merge-requests">
+            <h2>Assigned</h2>
 
-                    <h2>Reviewing</h2>
-                    <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:hoveredMergeRequest />
-                </div>
+            <div class="merge-request-table">
+                <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:hoveredMergeRequest />
             </div>
         </div>
 
-        <ActivityTable
-            activities={(client.activities ?? []).filter(
-                (x) => hoveredMergeRequest == null || x.mergeRequest.key == hoveredMergeRequest.key
-            )} />
+        <div class="merge-requests">
+            <div>
+                <button class="refresh" aria-label="Refresh" onclick={() => client.refreshAsync()}>
+                    <i class="fa-solid fa-arrows-rotate" class:fa-spin={client.state.kind == "loading"}></i>
+                </button>
+
+                <h2>Reviewing</h2>
+            </div>
+            <div class="merge-request-table">
+                <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:hoveredMergeRequest />
+            </div>
+        </div>
+
+        <div class="activity">
+            <ActivityTable
+                activities={(client.activities ?? []).filter(
+                    (x) => hoveredMergeRequest == null || x.mergeRequest.key == hoveredMergeRequest.key
+                )} />
+        </div>
     </div>
 {/if}
 
@@ -68,21 +74,24 @@
     }
 
     .content {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        grid-template-rows: 50vh auto;
         gap: 20px;
     }
 
-    .container {
-        height: 50vh;
+    .merge-requests {
+        display: flex;
+        flex-direction: column;
 
-        .row {
-            height: 100%;
-
-            & > div {
-                height: 100%;
-            }
+        .merge-request-table {
+            flex: 1;
+            overflow-y: scroll;
         }
+    }
+
+    .activity {
+        grid-column: 1 / span 2;
     }
 
     .refresh {
