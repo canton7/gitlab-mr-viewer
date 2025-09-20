@@ -154,11 +154,10 @@
                         <span {@attach tooltip({ title: moment(mr.createdAt).format(DATE_FORMAT) })}>
                             {moment(mr.createdAt).from($now)}
                         </span>
-                        ·
                         {#if role == "reviewer"}
-                            {mr.authorName}
+                            · {mr.authorName}
                         {:else if mr.reviewerName}
-                            {mr.reviewerName}
+                            · {mr.reviewerName}
                         {/if}
                     </p>
                     <p class="updated-at" {@attach tooltip({ title: moment(mr.updatedAt).format(DATE_FORMAT) })}>
