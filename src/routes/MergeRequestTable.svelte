@@ -155,7 +155,9 @@
                             {moment(mr.createdAt).from($now)}
                         </span>
                         {#if role == "reviewer"}
-                            · {mr.authorName}
+                            {#if mr.assigneeName}
+                                · {mr.assigneeName}
+                            {/if}
                         {:else if mr.reviewerName}
                             · {mr.reviewerName}
                         {/if}
