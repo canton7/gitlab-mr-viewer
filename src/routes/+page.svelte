@@ -86,7 +86,7 @@
 
         .merge-request-table {
             flex: 1;
-            overflow-y: scroll;
+            overflow-y: auto;
         }
     }
 
