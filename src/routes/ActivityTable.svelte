@@ -1,7 +1,7 @@
 <script lang="ts">
     import { tooltip } from "$lib/Bootstrap";
     import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
-    import { DATE_FORMAT, now } from "$lib/DateUtils";
+    import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import moment from "moment";
     import { slide } from "svelte/transition";
 
@@ -23,7 +23,7 @@
     <p class="footer">
         {activity.mergeRequest.reference} ·
         <span {@attach tooltip({ title: moment(activity.updatedAt).format(DATE_FORMAT) })}>
-            {moment(activity.updatedAt).from($now)}
+            {$fromNow(activity.updatedAt)}
         </span>
     </p>
 {/snippet}
