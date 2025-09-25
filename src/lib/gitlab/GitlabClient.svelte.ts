@@ -31,7 +31,7 @@ export interface MergeRequest {
     webUrl: string;
     createdAt: Date;
     updatedAt: Date;
-    authorName: string;
+    assigneeName: string | null;
     reviewerName: string | null;
     reference: string;
     isApproved: boolean;
@@ -142,7 +142,7 @@ export class GitlabClient {
             webUrl: mergeRequest.web_url,
             createdAt: new Date(mergeRequest.created_at),
             updatedAt: new Date(mergeRequest.updated_at),
-            authorName: mergeRequest.author.name,
+            assigneeName: mergeRequest.assignees?.at(0)?.name ?? null,
             reviewerName: mergeRequest.reviewers?.at(0)?.name ?? null,
             reference: mergeRequest.references.full.split("/").at(-1) ?? "",
             isApproved: (approvals.approved_by?.length ?? 0) > 0,
