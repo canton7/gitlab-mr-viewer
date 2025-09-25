@@ -217,7 +217,8 @@
         display: grid;
         grid-template-columns: 1fr auto;
         overflow: hidden;
-        margin-bottom: 15px;
+        // Give a bit of space for the border glow
+        margin: 5px 5px 15px 5px;
         border: 1px solid var(--overall-color);
         box-shadow: 0 0 4px 1px color-mix(in srgb, var(--overall-color) 60%, transparent);
         transition:
