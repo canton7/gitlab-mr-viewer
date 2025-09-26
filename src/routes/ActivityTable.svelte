@@ -41,7 +41,7 @@
     {#each activities as activity, index (activity.key)}
         {#if index == 1}
             <div class="row last-read" transition:slide={{ duration: 300 }}>
-                <p>Last read</p>
+                <p>NEW</p>
                 {@render timeline(index, false)}
             </div>
         {/if}
@@ -91,27 +91,46 @@
     }
 
     .last-read {
+        --color: red;
+
         &::before {
             content: "";
             position: absolute;
-            top: calc(50% + 0.1em); // A bit of a hack
-            left: 20%;
-            right: 20%;
+            top: calc(50% - 0.5px);
+            left: 0;
+            right: 0;
             height: 1px;
-            background: #ff8787;
+            background: var(--color);
+            z-index: 4;
         }
 
         p {
-            grid-column: 1 / span 3;
+            position: absolute;
+
+            // Let it overflow the parent, but force it to overflow equally to the top and bottom
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+
             width: fit-content;
-            font-size: 0.8em;
-            color: red;
-            background: white;
-            padding: 3px 5px;
-            margin-left: auto;
-            margin-right: auto;
-            z-index: 4;
+            font-weight: bold;
+            font-family: Verdana, Geneva, Tahoma, sans-serif;
+            font-size: 0.6em;
+
+            background: var(--color);
+            color: white;
+            border-radius: 3px 0 0 3px;
+            padding: 2px 10px 2px 3px;
+
+            // Little arrow to the right
+            clip-path: polygon(0% 0%, 80% 0%, 95% 50%, 80% 100%, 0% 100%);
+
+            z-index: 5;
         }
+    }
+
+    .row.last-read {
+        height: 6px;
     }
 
     p {
