@@ -28,8 +28,24 @@
     </p>
 {/snippet}
 
+{#snippet timeline(index: number, showDot: boolean)}
+    <div class={["timeline", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
+        {#if showDot}
+            <span class="dot-outer"><span class="dot-inner"></span></span>
+        {/if}
+        <span class="line"></span>
+    </div>
+{/snippet}
+
 <div class="activity-table">
     {#each activities as activity, index (activity.key)}
+        {#if index == 1}
+            <div class="row last-read" transition:slide={{ duration: 300 }}>
+                <p>Last read</p>
+                {@render timeline(index, false)}
+            </div>
+        {/if}
+
         <div class="row" transition:slide={{ duration: 300 }}>
             <div class="details left">
                 {#if activity.mergeRequest.type == "assignee"}
@@ -37,10 +53,7 @@
                 {/if}
             </div>
 
-            <div class={["timeline", index == 0 && "first-row", index == activities.length - 1 && "last-row"]}>
-                <span class="dot-outer"><span class="dot-inner"></span></span>
-                <span class="line"></span>
-            </div>
+            {@render timeline(index, true)}
 
             <div class="details">
                 {#if activity.mergeRequest.type == "reviewer"}
@@ -72,8 +85,33 @@
 
     .row {
         display: grid;
+        position: relative;
         grid-column: 1 / span 3;
         grid-template-columns: subgrid;
+    }
+
+    .last-read {
+        &::before {
+            content: "";
+            position: absolute;
+            top: calc(50% + 0.1em); // A bit of a hack
+            left: 20%;
+            right: 20%;
+            height: 1px;
+            background: #ff8787;
+        }
+
+        p {
+            grid-column: 1 / span 3;
+            width: fit-content;
+            font-size: 0.8em;
+            color: red;
+            background: white;
+            padding: 3px 5px;
+            margin-left: auto;
+            margin-right: auto;
+            z-index: 4;
+        }
     }
 
     p {
@@ -95,57 +133,57 @@
     }
 
     .timeline {
-        position: relative;
         width: 30px;
-    }
 
-    .dot-outer {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        z-index: 3;
+        .dot-outer {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
 
-        width: var(--dot-outer-size);
-        height: var(--dot-outer-size);
+            width: var(--dot-outer-size);
+            height: var(--dot-outer-size);
 
-        background-color: var(--timeline-light);
-        border-radius: 50%;
-    }
+            background-color: var(--timeline-light);
+            border-radius: 50%;
+        }
 
-    .dot-inner {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+        .dot-inner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
 
-        width: var(--dot-inner-size);
-        height: var(--dot-inner-size);
+            width: var(--dot-inner-size);
+            height: var(--dot-inner-size);
 
-        background-color: var(--timeline-dark);
-        border-radius: 50%;
-    }
+            background-color: var(--timeline-dark);
+            border-radius: 50%;
+        }
 
-    .line {
-        position: absolute;
-        left: 50%;
-        transform: translate(-50%, 0);
-        z-index: 2;
+        .line {
+            position: absolute;
+            left: 50%;
+            transform: translate(-50%, 0);
+            z-index: 2;
 
-        background-color: var(--timeline-light);
-        width: var(--line-width);
-        height: 100%;
-    }
+            background-color: var(--timeline-light);
+            width: var(--line-width);
+            top: 0;
+            bottom: 0;
+        }
 
-    .first-row .line {
-        top: calc(50% + var(--dot-outer-size) / 2);
-    }
+        &.first-row .line {
+            top: calc(50% + var(--dot-outer-size) / 2);
+        }
 
-    .last-row .line {
-        bottom: calc(50% - var(--dot-outer-size) / 2);
-    }
+        &.last-row .line {
+            bottom: calc(50% - var(--dot-outer-size) / 2);
+        }
 
-    .first-row.last-row .line {
-        display: none;
+        &.first-row.last-row .line {
+            display: none;
+        }
     }
 </style>
