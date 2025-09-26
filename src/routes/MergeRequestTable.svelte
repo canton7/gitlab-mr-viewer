@@ -1,7 +1,7 @@
 <script lang="ts">
     import { tooltip } from "$lib/Bootstrap";
     import type { MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
-    import { DATE_FORMAT, now } from "$lib/DateUtils";
+    import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import type { Tooltip } from "bootstrap";
     import moment from "moment";
     import { flip } from "svelte/animate";
@@ -152,7 +152,7 @@
                     <p>
                         <span class="no-break">{mr.reference}</span> ·
                         <span {@attach tooltip({ title: moment(mr.createdAt).format(DATE_FORMAT) })}>
-                            {moment(mr.createdAt).from($now)}
+                            {$fromNow(mr.createdAt)}
                         </span>
                         {#if role == "reviewer"}
                             {#if mr.assigneeName}
@@ -163,7 +163,7 @@
                         {/if}
                     </p>
                     <p class="updated-at" {@attach tooltip({ title: moment(mr.updatedAt).format(DATE_FORMAT) })}>
-                        Updated {moment(mr.updatedAt).from($now)}
+                        Updated {$fromNow(mr.updatedAt)}
                     </p>
                 </div>
             </div>
