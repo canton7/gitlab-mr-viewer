@@ -18,7 +18,7 @@ import { GitlabCache } from "./GitlabCache";
 const UPDATE_PERIOD_MS = 1 * 60 * 1000;
 const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
 // Activities which occurr within 10 mins of each other get combined
-const COMBINE_ACTIVITY_TIME_MS = 10 * 60 * 1000;
+const COMBINE_ACTIVITY_TIME_MS = 5 * 60 * 1000;
 
 export type GitlabCiStatus = CommitablePipelineStatus | "none";
 
@@ -217,51 +217,61 @@ export class GitlabClient {
             dateGetter: (current: DiscussionNoteSchema) => Date,
             authorGetter: (current: DiscussionNoteSchema) => { id: number; name: string },
             messageGetter: (count: number) => string
-        ) {
+        ): Activity[] {
+            const collectedActivities: Activity[] = [];
+
             type Collection = { end: Date; firstNote: DiscussionNoteSchema; count: number };
 
             const appendComments = (current: Collection) =>
-                activities.push({
+                collectedActivities.push({
                     key: `${synthesisedNoteType}-${current.firstNote.id}-${type}`,
                     body: messageGetter(current.count),
-                    updatedAt: current.end,
+                    updatedAt: dateGetter(current.firstNote),
                     noteId: current.firstNote.id,
                     authorName: authorGetter(current.firstNote).name,
                     mergeRequest: mergeRequest,
                 });
 
-            let current: Collection | null = null;
+            // Author id -> collection of notes
+            const currents = new Map<number, Collection>();
+            // let current: Collection | null = null;
             for (const note of notes) {
                 const date = dateGetter(note);
-                if (
-                    current != null &&
-                    authorGetter(current.firstNote).id == authorGetter(current.firstNote).id &&
-                    date.getTime() - current.end.getTime() < COMBINE_ACTIVITY_TIME_MS
-                ) {
+                const authorId = authorGetter(note).id;
+
+                // Is there an open collection for this author, which is recent enough to combine?
+                const current = currents.get(authorId);
+                if (current && date.getTime() - current.end.getTime() < COMBINE_ACTIVITY_TIME_MS) {
                     current.end = date;
                     current.count++;
                 } else {
-                    if (current != null) {
+                    // Either there's no open collection for this author, or there is and it's too old
+                    if (current) {
                         appendComments(current);
                     }
-                    current = { end: date, firstNote: note, count: 1 };
+                    currents.set(authorId, { end: date, firstNote: note, count: 1 });
                 }
             }
-            if (current != null) {
+            for (const current of currents.values()) {
                 appendComments(current);
             }
+
+            collectedActivities.sort((x, y) => x.updatedAt.getTime() - y.updatedAt.getTime());
+            return collectedActivities;
         }
 
         // First, adding comments
         commentNotes.sort((x, y) => new Date(x.updated_at).getTime() - new Date(y.updated_at).getTime());
 
-        collectSimilar(
-            "synthesised-add-comments",
-            commentNotes,
-            // The updated time gets updated when we resolve a comment, so we need to use the created time
-            (note) => new Date(note.created_at),
-            (note) => note.author,
-            (count) => `added ${count} ${count == 1 ? "comment" : "comments"}`
+        activities.push(
+            ...collectSimilar(
+                "synthesised-add-comments",
+                commentNotes,
+                // The updated time gets updated when we resolve a comment, so we need to use the created time
+                (note) => new Date(note.created_at),
+                (note) => note.author,
+                (count) => `added ${count} ${count == 1 ? "comment" : "comments"}`
+            )
         );
 
         // Then, resolving
@@ -294,7 +304,6 @@ export class GitlabClient {
     ): Promise<T & { name: string | null }> {
         const queryName = async (username: string) => {
             const user = await api.Users.all({ username: username });
-            console.log(user);
             return user.at(0)?.name ?? null;
         };
 
