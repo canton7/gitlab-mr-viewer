@@ -34,12 +34,12 @@
                 break;
             }
         }
-        return count == 0 ? "" : ` (${count})`;
+        return count == 0 ? "" : `(${count}) `;
     });
 </script>
 
 <svelte:head>
-    <title>Merge Requests{numUnseenActivities}</title>
+    <title>{numUnseenActivities}Merge Requests</title>
 </svelte:head>
 
 {#if browser && client.state.kind == "unconfigured"}
