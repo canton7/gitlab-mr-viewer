@@ -15,7 +15,6 @@ import { createRequesterFn, type RequestOptions, type ResourceOptions } from "@g
 import { createRequestHandler } from "./GitlabUtils";
 import { GitlabCache } from "./GitlabCache";
 
-const UPDATE_PERIOD_MS = 1 * 60 * 1000;
 const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
 // Activities which occurr within 10 mins of each other get combined
 const COMBINE_ACTIVITY_TIME_MS = 5 * 60 * 1000;
@@ -56,6 +55,7 @@ type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" }
 export class GitlabClient {
     private _api: CoreGitlab | null = null;
     private _user: Promise<ExpandedUserSchema> | null = null;
+    private _pollInterval: number | null = null;
     private _intervalHandle: number | null = null;
     private readonly _users: Map<string, Promise<string | null>> = new Map();
 
@@ -86,16 +86,20 @@ export class GitlabClient {
         return this._state;
     }
 
-    start() {
+    start(pollInterval: number) {
         this.stop();
-        this._intervalHandle = setInterval(() => this.loadAsync(), UPDATE_PERIOD_MS);
-        this.loadAsync();
+        this._intervalHandle = setInterval(() => this.loadAsync(), pollInterval);
+        if (this._pollInterval == null || pollInterval < this._pollInterval) {
+            this.loadAsync();
+        }
+        this._pollInterval = pollInterval;
     }
 
     stop() {
         if (this._intervalHandle !== null) {
             clearInterval(this._intervalHandle);
             this._intervalHandle = null;
+            this._pollInterval = null;
         }
     }
 

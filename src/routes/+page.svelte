@@ -10,18 +10,36 @@
 
     let lastSeen = $state(new Date());
 
+    const visibleUpdatePeriodMs = 1 * 60 * 1000;
+    const hiddenUpdatePeriodMs = 10 * 60 * 1000;
+
     isPageVisible.subscribe((isVisible) => {
         if (isVisible) {
-            client?.start();
+            client?.start(visibleUpdatePeriodMs);
         } else {
             lastSeen = new Date();
-            client?.stop();
+            client?.start(hiddenUpdatePeriodMs);
         }
+    });
+
+    let numUnseenActivities = $derived.by(() => {
+        if (client?.activities == null || $isPageVisible) {
+            return "";
+        }
+        let count = 0;
+        for (const activity of client.activities) {
+            if (activity.updatedAt > lastSeen) {
+                count++;
+            } else {
+                break;
+            }
+        }
+        return count == 0 ? "" : ` (${count})`;
     });
 </script>
 
 <svelte:head>
-    <title>Merge Requests</title>
+    <title>Merge Requests{numUnseenActivities}</title>
 </svelte:head>
 
 {#if browser && client.state.kind == "unconfigured"}
