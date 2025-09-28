@@ -6,7 +6,7 @@
     import ActivityTable from "./ActivityTable.svelte";
     import isPageVisible from "$lib/PageVisibility";
 
-    let hoveredMergeRequest: MergeRequest | null = $state.raw(null);
+    let filteredMergeRequest: MergeRequest | null = $state.raw(null);
 
     let lastSeen = $state(new Date());
 
@@ -52,7 +52,7 @@
             <h2>Assigned</h2>
 
             <div class="merge-request-table">
-                <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:hoveredMergeRequest />
+                <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:filteredMergeRequest />
             </div>
         </div>
 
@@ -65,14 +65,14 @@
                 <h2>Reviewing</h2>
             </div>
             <div class="merge-request-table">
-                <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:hoveredMergeRequest />
+                <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:filteredMergeRequest />
             </div>
         </div>
 
         <div class="activity">
             <ActivityTable
                 activities={(client.activities ?? []).filter(
-                    (x) => hoveredMergeRequest == null || x.mergeRequest.key == hoveredMergeRequest.key
+                    (x) => filteredMergeRequest == null || x.mergeRequest.key == filteredMergeRequest.key
                 )}
                 {lastSeen} />
         </div>
@@ -88,19 +88,18 @@
     .content {
         display: grid;
         grid-template-columns: 1fr 1fr;
-        grid-template-rows: 50vh auto;
+        grid-template-rows: minmax(50vh, auto) auto;
         gap: 20px;
     }
 
-    .merge-requests {
-        display: flex;
-        flex-direction: column;
+    // .merge-requests {
+    //     display: flex;
+    //     flex-direction: column;
 
-        .merge-request-table {
-            flex: 1;
-            overflow-y: auto;
-        }
-    }
+    //     .merge-request-table {
+    //         flex: 1;
+    //     }
+    // }
 
     .activity {
         grid-column: 1 / span 2;
