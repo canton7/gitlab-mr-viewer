@@ -87,9 +87,12 @@ export class GitlabClient {
     }
 
     start(pollInterval: number) {
+        const oldPollInterval = this._pollInterval;
+
         this.stop();
         this._intervalHandle = setInterval(() => this.loadAsync(), pollInterval);
-        if (this._pollInterval == null || pollInterval < this._pollInterval) {
+
+        if (oldPollInterval == null || pollInterval < oldPollInterval) {
             this.loadAsync();
         }
         this._pollInterval = pollInterval;
