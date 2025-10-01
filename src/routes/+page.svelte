@@ -4,26 +4,19 @@
     import { gitlabClient as client, type MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
     import MergeRequestTable from "./MergeRequestTable.svelte";
     import ActivityTable from "./ActivityTable.svelte";
-    import { onMount } from "svelte";
-    import { on } from "svelte/events";
+    import isPageVisible from "$lib/PageVisibility";
 
     let hoveredMergeRequest: MergeRequest | null = $state.raw(null);
 
-    onMount(() => {
-        client.start();
+    let lastSeen = $state(new Date());
 
-        const removeListener = on(document, "visibilitychange", () => {
-            if (document.hidden) {
-                client?.stop();
-            } else {
-                client?.start();
-            }
-        });
-
-        return () => {
-            client.stop();
-            removeListener();
-        };
+    isPageVisible.subscribe((isVisible) => {
+        if (isVisible) {
+            client?.start();
+        } else {
+            lastSeen = new Date();
+            client?.stop();
+        }
     });
 </script>
 
@@ -62,7 +55,8 @@
             <ActivityTable
                 activities={(client.activities ?? []).filter(
                     (x) => hoveredMergeRequest == null || x.mergeRequest.key == hoveredMergeRequest.key
-                )} />
+                )}
+                {lastSeen} />
         </div>
     </div>
 {/if}

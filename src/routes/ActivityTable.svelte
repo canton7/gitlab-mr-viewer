@@ -3,13 +3,22 @@
     import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
     import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import moment from "moment";
-    import { slide } from "svelte/transition";
+    import { fade, slide } from "svelte/transition";
 
     interface Props {
         activities: Activity[];
+        lastSeen: Date | null;
     }
 
-    let { activities }: Props = $props();
+    let { activities, lastSeen }: Props = $props();
+
+    let indexOfLastSeen = $derived.by(() => {
+        if (lastSeen == null) {
+            return null;
+        }
+        const index = activities.findIndex((x) => x.updatedAt.getTime() - lastSeen.getTime() < 0);
+        return index == 0 ? null : index;
+    });
 </script>
 
 {#snippet details(activity: Activity)}
@@ -39,8 +48,8 @@
 
 <div class="activity-table">
     {#each activities as activity, index (activity.key)}
-        {#if index == 1}
-            <div class="row last-read" transition:slide={{ duration: 300 }}>
+        {#if indexOfLastSeen != null && index == indexOfLastSeen}
+            <div class="row last-read" transition:fade={{ duration: 100 }}>
                 <p>NEW</p>
                 {@render timeline(index, false)}
             </div>
