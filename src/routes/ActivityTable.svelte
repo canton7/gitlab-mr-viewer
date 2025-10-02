@@ -4,6 +4,7 @@
     import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import moment from "moment";
     import { fade, slide } from "svelte/transition";
+    import { ACTIVITY_ANIMATION_DURATION } from "$lib/Const";
 
     interface Props {
         activities: Activity[];
@@ -55,7 +56,7 @@
             </div>
         {/if}
 
-        <div class="row" transition:slide={{ duration: 300 }}>
+        <div class="row" transition:slide={{ duration: ACTIVITY_ANIMATION_DURATION }}>
             <div class="details left">
                 {#if activity.mergeRequest.type == "assignee"}
                     {@render details(activity)}

@@ -6,15 +6,22 @@
     import moment from "moment";
     import { flip } from "svelte/animate";
     import { fade } from "svelte/transition";
-    import { ANIMATION_DURATION } from "$lib/Const";
+    import { ACTIVITY_ANIMATION_DURATION, CARD_ANIMATION_DURATION } from "$lib/Const";
 
     interface Props {
         mergeRequests: MergeRequest[] | null;
         role: "assignee" | "reviewer";
-        hoveredMergeRequest: MergeRequest | null;
+        filteredMergeRequest: MergeRequest | null;
     }
 
-    let { mergeRequests, role, hoveredMergeRequest = $bindable(null) }: Props = $props();
+    let { mergeRequests, role, filteredMergeRequest = $bindable(null) }: Props = $props();
+
+    let hoveredMergeRequest = $state<MergeRequest | null>(null);
+    let pinnedMergeRequest = $state<MergeRequest | null>(null);
+
+    $effect(() => {
+        filteredMergeRequest = hoveredMergeRequest ?? pinnedMergeRequest;
+    });
 
     function getApprovalColor(mr: MergeRequest) {
         // If it's approved, that's always good
@@ -119,9 +126,12 @@
 </script>
 
 <!-- We need to have this always shown, otherwise the cards don't animate in after a load -->
-<div class="merge-request-table" style:--animation-duration={`${ANIMATION_DURATION}ms`}>
+<div
+    class="merge-request-table"
+    style:--card-animation-duration={`${CARD_ANIMATION_DURATION}ms`}
+    style:--activity-animation-duration={`${ACTIVITY_ANIMATION_DURATION}ms`}>
     {#if mergeRequests == null || mergeRequests.length == 0}
-        <p class="status" in:fade={{ duration: ANIMATION_DURATION, delay: ANIMATION_DURATION }}>
+        <p class="status" in:fade={{ duration: CARD_ANIMATION_DURATION, delay: CARD_ANIMATION_DURATION }}>
             {#if mergeRequests == null}
                 Loading...
             {:else}
@@ -133,24 +143,40 @@
     {#each mergeRequests ?? [] as mr (mr.key)}
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-            class="card"
-            animate:flip={{ duration: ANIMATION_DURATION }}
-            transition:fade={{ duration: ANIMATION_DURATION }}
+            class={[
+                "card",
+                filteredMergeRequest == null ? null : filteredMergeRequest.key == mr.key ? "selected" : "deselected",
+            ]}
+            animate:flip={{ duration: CARD_ANIMATION_DURATION }}
+            transition:fade={{ duration: CARD_ANIMATION_DURATION }}
             style:--approval-color={`var(${getApprovalColor(mr)})`}
             style:--discussions-color={`var(${getDiscussionColor(mr)})`}
             style:--ci-color={`var(${getCiColor(mr)})`}
             style:--overall-color={`var(${getOverallColor(mr)})`}>
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
-            <div
-                class="content"
-                onclick={() => window.open(mr.webUrl, "_blank")}
-                onmouseenter={() => (hoveredMergeRequest = mr)}
-                onmouseleave={() => (hoveredMergeRequest = null)}>
+            <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
                 <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
                 <div class="footer">
                     <p>
-                        <span class="no-break">{mr.reference}</span> ·
+                        {#if pinnedMergeRequest?.key == mr.key}
+                            <i class="pin fa-solid fa-thumbtack"></i>
+                        {/if}
+                        <span
+                            class="no-break mr-reference"
+                            onclick={(e) => {
+                                e.stopPropagation();
+                                if (pinnedMergeRequest?.key == mr.key) {
+                                    pinnedMergeRequest = null;
+                                } else {
+                                    pinnedMergeRequest = mr;
+                                }
+                            }}
+                            onmouseenter={() => (hoveredMergeRequest = mr)}
+                            onmouseleave={() => (hoveredMergeRequest = null)}>
+                            {mr.reference}
+                        </span>
+                        ·
                         <span {@attach tooltip({ title: moment(mr.createdAt).format(DATE_FORMAT) })}>
                             {$fromNow(mr.createdAt)}
                         </span>
@@ -224,8 +250,14 @@
         border: 1px solid var(--overall-color);
         box-shadow: 0 0 4px 1px color-mix(in srgb, var(--overall-color) 60%, transparent);
         transition:
-            border box-shadow var(--animation-duration) ease,
-            box-shadow var(--animation-duration) ease;
+            border var(--card-animation-duration) ease,
+            box-shadow var(--card-animation-duration) ease,
+            opacity var(--activity-animation-duration) ease;
+
+        opacity: 1;
+        &.deselected {
+            opacity: 0.5;
+        }
     }
 
     .content {
@@ -235,7 +267,6 @@
         grid-template-rows: 1fr auto;
         row-gap: 8px;
         padding: 5px 8px;
-        cursor: pointer;
     }
 
     .bubbles {
@@ -263,7 +294,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background-color var(--animation-duration) ease;
+            transition: background-color var(--card-animation-duration) ease;
         }
 
         .approval {
@@ -297,5 +328,20 @@
         .updated-at {
             text-wrap: nowrap;
         }
+
+        .mr-reference {
+            cursor: pointer;
+            &:hover {
+                text-decoration: underline;
+            }
+        }
+
+        .pin {
+            font-size: 0.8em;
+        }
+    }
+
+    .card.selected .footer .mr-reference {
+        text-decoration: underline;
     }
 </style>
