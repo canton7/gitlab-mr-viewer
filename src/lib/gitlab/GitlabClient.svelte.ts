@@ -112,16 +112,16 @@ export class GitlabClient {
         type: MergeRequestType
     ): Promise<[MergeRequest, Activity[]]> {
         const [approvals, discussions, commitStatus] = await Promise.all([
-            await api.MergeRequestApprovals.showConfiguration(mergeRequest.project_id, {
+            api.MergeRequestApprovals.showConfiguration(mergeRequest.project_id, {
                 mergerequestIId: mergeRequest.iid,
             }),
-            await api.MergeRequestDiscussions.all(mergeRequest.project_id, mergeRequest.iid, {
+            api.MergeRequestDiscussions.all(mergeRequest.project_id, mergeRequest.iid, {
                 pagination: "keyset",
                 sort: "desc",
                 orderBy: "updated_at",
                 perPage: 50,
             }),
-            await api.Commits.allStatuses(mergeRequest.project_id, mergeRequest.sha),
+            api.Commits.allStatuses(mergeRequest.project_id, mergeRequest.sha),
         ]);
 
         let resolvable = 0;
