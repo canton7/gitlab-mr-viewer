@@ -5,50 +5,25 @@ import { browser } from "$app/environment";
 import { gitlabSettings } from "$lib/Settings";
 import {
     Gitlab as CoreGitlab,
-    type CommitablePipelineStatus,
     type DiscussionNoteSchema,
     type DiscussionSchema,
     type ExpandedUserSchema,
     type MergeRequestSchemaWithBasicLabels,
 } from "@gitbeaker/core";
-import { createRequesterFn, type RequestOptions, type ResourceOptions } from "@gitbeaker/requester-utils";
+import {
+    createRequesterFn,
+    GitbeakerRequestError,
+    type RequestOptions,
+    type ResourceOptions,
+} from "@gitbeaker/requester-utils";
 import { createRequestHandler } from "./GitlabUtils";
 import { GitlabCache } from "./GitlabCache";
+import { TicketIntegration, type Activity, type MergeRequest, type MergeRequestType } from "./Types";
+import { JiraTicketIntegration } from "./JiraTicketIntegration";
 
 const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
 // Activities which occurr within 10 mins of each other get combined
 const COMBINE_ACTIVITY_TIME_MS = 5 * 60 * 1000;
-
-export type GitlabCiStatus = CommitablePipelineStatus | "none";
-
-export type MergeRequestType = "assignee" | "reviewer";
-
-export interface MergeRequest {
-    key: string;
-    type: MergeRequestType;
-    title: string;
-    webUrl: string;
-    createdAt: Date;
-    updatedAt: Date;
-    assigneeName: string | null;
-    reviewerName: string | null;
-    reference: string;
-    isApproved: boolean;
-    firstOpenNoteId: number | null;
-    openDiscussions: number;
-    totalDiscussions: number;
-    ciStatus: GitlabCiStatus;
-    ciLink: string | null;
-}
-
-export interface Activity {
-    key: string;
-    body: string;
-    updatedAt: Date;
-    noteId: number | null;
-    authorName: string;
-    mergeRequest: MergeRequest;
-}
 
 type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" } | { kind: "error"; error: Error };
 
@@ -58,6 +33,7 @@ export class GitlabClient {
     private _pollInterval: number | null = null;
     private _intervalHandle: number | null = null;
     private readonly _users: Map<string, Promise<string | null>> = new Map();
+    private readonly _ticketIntegrations: Map<number, Promise<TicketIntegration>> = new Map();
 
     private _state = $state<State>({ kind: "unconfigured" });
     assigned = $state<MergeRequest[] | null>(null);
@@ -68,6 +44,7 @@ export class GitlabClient {
         this._api = api;
 
         this._users.clear();
+        this._ticketIntegrations.clear();
         this.assigned = null;
         this.reviewing = null;
         this.activities = null;
@@ -158,6 +135,7 @@ export class GitlabClient {
             totalDiscussions: totalDiscussions,
             ciStatus: commitStatus.at(0)?.status ?? "none",
             ciLink: commitStatus.at(0)?.target_url ?? null,
+            ticketIntegration: await this.getTicketIntegrationAsync(mergeRequest.project_id),
         };
 
         const activities = await this.createActivitiesAsync(api, type, discussions, mr);
@@ -353,6 +331,37 @@ export class GitlabClient {
         }
 
         return input;
+    }
+
+    private async getTicketIntegrationAsync(projectId: number): Promise<TicketIntegration> {
+        const queryIntegration = async (projectId: number) => {
+            try {
+                const result = await this._api!.Integrations.show(projectId, "jira");
+                const properties = result.properties as {
+                    url: string;
+                    jira_issue_prefix: string | null;
+                    jira_issue_regex: string | null;
+                };
+                return new JiraTicketIntegration(
+                    properties.url,
+                    properties.jira_issue_prefix,
+                    properties.jira_issue_regex
+                );
+            } catch (err) {
+                if (err instanceof GitbeakerRequestError) {
+                    return new TicketIntegration();
+                }
+                throw err;
+            }
+        };
+
+        let integrationPromise = this._ticketIntegrations.get(projectId);
+        if (integrationPromise === undefined) {
+            integrationPromise = queryIntegration(projectId);
+            this._ticketIntegrations.set(projectId, integrationPromise);
+        }
+
+        return await integrationPromise;
     }
 
     private async doRequestAsync(action: (api: CoreGitlab, userId: number) => Promise<void>) {

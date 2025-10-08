@@ -1,10 +1,10 @@
 <script lang="ts">
     import { tooltip } from "$lib/Bootstrap";
-    import type { Activity } from "$lib/gitlab/GitlabClient.svelte";
     import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import moment from "moment";
     import { fade, slide } from "svelte/transition";
     import { ACTIVITY_ANIMATION_DURATION } from "$lib/Const";
+    import { type Activity } from "$lib/gitlab/Types";
 
     interface Props {
         activities: Activity[];

@@ -1,12 +1,12 @@
 <script lang="ts">
     import { tooltip } from "$lib/Bootstrap";
-    import type { MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
     import { DATE_FORMAT, fromNow } from "$lib/DateUtils";
     import type { Tooltip } from "bootstrap";
     import moment from "moment";
     import { flip } from "svelte/animate";
     import { fade } from "svelte/transition";
     import { ACTIVITY_ANIMATION_DURATION, CARD_ANIMATION_DURATION } from "$lib/Const";
+    import type { MergeRequest } from "$lib/gitlab/Types";
 
     interface Props {
         mergeRequests: MergeRequest[] | null;
@@ -156,7 +156,17 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
-                <p class="m-0"><a href={mr.webUrl} target="_blank">{mr.title}</a></p>
+                <p class="m-0">
+                    {#each mr.ticketIntegration.createLinkParts(mr.title, mr.webUrl) as linkPart (linkPart)}
+                        {#if linkPart.url}
+                            <a href={linkPart.url} target="_blank" onclick={(e) => e.stopPropagation()}>
+                                {linkPart.text}
+                            </a>
+                        {:else}
+                            {linkPart.text}
+                        {/if}
+                    {/each}
+                </p>
                 <div class="footer">
                     <p>
                         {#if pinnedMergeRequest?.key == mr.key}
