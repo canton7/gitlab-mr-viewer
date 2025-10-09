@@ -21,8 +21,8 @@ import { GitlabCache } from "./GitlabCache";
 import { TicketIntegration, type Activity, type MergeRequest, type MergeRequestType } from "./Types";
 import { JiraTicketIntegration } from "./JiraTicketIntegration";
 
-const CACHE_FLUSH_PERIOD_MS = 15 * 60 * 1000;
-// Activities which occurr within 10 mins of each other get combined
+const CACHE_FLUSH_PERIOD_MS = 60 * 60 * 1000;
+// Activities which occurr within 5 mins of each other get combined
 const COMBINE_ACTIVITY_TIME_MS = 5 * 60 * 1000;
 
 type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" } | { kind: "error"; error: Error };
