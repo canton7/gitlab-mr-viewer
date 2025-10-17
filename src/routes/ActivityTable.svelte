@@ -5,6 +5,7 @@
     import { fade, slide } from "svelte/transition";
     import { ACTIVITY_ANIMATION_DURATION } from "$lib/Const";
     import { type Activity } from "$lib/gitlab/Types";
+    import { stripHtml } from "$lib/HtmlUtils";
 
     interface Props {
         activities: Activity[];
@@ -26,7 +27,7 @@
     <p>
         <a href={activity.url} target="_blank">
             {activity.authorName}
-            {activity.body}
+            {stripHtml(activity.body)}
         </a>
     </p>
     <p class="footer">
