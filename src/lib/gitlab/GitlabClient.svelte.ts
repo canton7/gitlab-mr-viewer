@@ -9,6 +9,7 @@ import {
     type DiscussionSchema,
     type ExpandedUserSchema,
     type MergeRequestSchemaWithBasicLabels,
+    type PipelineSchema,
 } from "@gitbeaker/core";
 import {
     createRequesterFn,
@@ -26,6 +27,12 @@ const CACHE_FLUSH_PERIOD_MS = 60 * 60 * 1000;
 const COMBINE_ACTIVITY_TIME_MS = 5 * 60 * 1000;
 
 type State = { kind: "unconfigured" } | { kind: "loading" } | { kind: "loaded" } | { kind: "error"; error: Error };
+
+const PIPELINE_STATUS_MAP = new Map<string, string>([
+    ["success", "succeeded"],
+    ["failed", "failed"],
+    ["canceled", "was canceled"],
+]);
 
 export class GitlabClient {
     private _api: CoreGitlab | null = null;
@@ -88,7 +95,7 @@ export class GitlabClient {
         mergeRequest: MergeRequestSchemaWithBasicLabels,
         type: MergeRequestType
     ): Promise<[MergeRequest, Activity[]]> {
-        const [approvals, discussions, commitStatus] = await Promise.all([
+        const [approvals, discussions, pipelines, commitStatus] = await Promise.all([
             api.MergeRequestApprovals.showConfiguration(mergeRequest.project_id, {
                 mergerequestIId: mergeRequest.iid,
             }),
@@ -98,6 +105,7 @@ export class GitlabClient {
                 orderBy: "updated_at",
                 perPage: 50,
             }),
+            api.MergeRequests.allPipelines(mergeRequest.project_id, mergeRequest.iid),
             api.Commits.allStatuses(mergeRequest.project_id, mergeRequest.sha),
         ]);
 
@@ -134,11 +142,11 @@ export class GitlabClient {
             openDiscussions: resolvable,
             totalDiscussions: totalDiscussions,
             ciStatus: commitStatus.at(0)?.status ?? "none",
-            ciLink: commitStatus.at(0)?.target_url ?? null,
+            ciUrl: commitStatus.at(0)?.target_url ?? null,
             ticketIntegration: await this.getTicketIntegrationAsync(mergeRequest.project_id),
         };
 
-        const activities = await this.createActivitiesAsync(api, type, discussions, mr);
+        const activities = await this.createActivitiesAsync(api, type, discussions, pipelines as PipelineSchema[], mr);
 
         return [mr, activities];
     }
@@ -147,6 +155,7 @@ export class GitlabClient {
         api: CoreGitlab,
         type: MergeRequestType,
         discussions: DiscussionSchema[],
+        pipelines: PipelineSchema[],
         mergeRequest: MergeRequest
     ) {
         // Discussions are presented in as a list of threads, but each thread may have multiple comments left at
@@ -175,10 +184,10 @@ export class GitlabClient {
                 if (body) {
                     // It's technically possible for the same MR to show up in "reviewing" and "assigned"
                     activities.push({
-                        key: `${discussion.id}-${type}`,
+                        key: `${mergeRequest.key}-discussion-${discussion.id}-${type}`,
                         body: await this.replaceUsernamesAsync(api, body),
                         updatedAt: new Date(discussion.notes[0].updated_at),
-                        noteId: discussion.notes[0].id,
+                        url: `${mergeRequest.webUrl}#note_${discussion.notes[0].id}`,
                         authorName: discussion.notes[0].author.name,
                         mergeRequest: mergeRequest,
                     });
@@ -196,6 +205,21 @@ export class GitlabClient {
             }
         }
 
+        for (const pipeline of pipelines) {
+            // Don't show pipelines which are in-progress, as these will change later, and that will be confusing
+            const pipelineStatus = PIPELINE_STATUS_MAP.get(pipeline.status);
+            if (pipelineStatus !== undefined) {
+                activities.push({
+                    key: `${mergeRequest.key}-pipeline-${pipeline.iid}-${type}`,
+                    body: pipelineStatus,
+                    updatedAt: new Date(pipeline.updated_at),
+                    url: pipeline.web_url,
+                    authorName: "Pipeline",
+                    mergeRequest: mergeRequest,
+                });
+            }
+        }
+
         function collectSimilar(
             synthesisedNoteType: string,
             notes: DiscussionNoteSchema[],
@@ -209,10 +233,10 @@ export class GitlabClient {
 
             const appendComments = (current: Collection) =>
                 collectedActivities.push({
-                    key: `${synthesisedNoteType}-${current.firstNote.id}-${type}`,
+                    key: `${mergeRequest.key}-${synthesisedNoteType}-${current.firstNote.id}-${type}`,
                     body: messageGetter(current.count),
                     updatedAt: dateGetter(current.firstNote),
-                    noteId: current.firstNote.id,
+                    url: `${mergeRequest.webUrl}#note_${current.firstNote.id}`,
                     authorName: authorGetter(current.firstNote).name,
                     mergeRequest: mergeRequest,
                 });

@@ -23,9 +23,8 @@
 </script>
 
 {#snippet details(activity: Activity)}
-    {@const url = `${activity.mergeRequest.webUrl}#note_${activity.noteId}`}
     <p>
-        <a href={url} target="_blank">
+        <a href={activity.url} target="_blank">
             {activity.authorName}
             {activity.body}
         </a>

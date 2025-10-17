@@ -99,12 +99,12 @@
     function getCiTooltip(mr: MergeRequest) {
         let title;
         if (mr.ciStatus == "none") {
-            title = "No CI";
+            title = "No Pipeline";
         } else {
-            title = `CI ${mr.ciStatus}`;
+            title = `Pipeline ${mr.ciStatus}`;
         }
 
-        const link = mr.ciLink == null ? "" : "<br><em>Click to view</em>";
+        const link = mr.ciUrl == null ? "" : "<br><em>Click to view</em>";
         return title + link;
     }
 
@@ -215,8 +215,10 @@
                     {/if}
                 </div>
                 <div class="ci" {@attach tooltip({ title: getCiTooltip(mr), ...tooltipOptions })}>
-                    {#if mr.ciLink}
-                        <a href={mr.ciLink} target="_blank" aria-label="CI Status"><i class="fa-solid fa-robot"></i></a>
+                    {#if mr.ciUrl}
+                        <a href={mr.ciUrl} target="_blank" aria-label="Pipeline Status">
+                            <i class="fa-solid fa-robot"></i>
+                        </a>
                     {:else}
                         <i class="fa-solid fa-robot"></i>
                     {/if}

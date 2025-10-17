@@ -19,7 +19,7 @@ export interface MergeRequest {
     openDiscussions: number;
     totalDiscussions: number;
     ciStatus: GitlabCiStatus;
-    ciLink: string | null;
+    ciUrl: string | null;
     ticketIntegration: TicketIntegration;
 }
 
@@ -27,7 +27,7 @@ export interface Activity {
     key: string;
     body: string;
     updatedAt: Date;
-    noteId: number | null;
+    url: string;
     authorName: string;
     mergeRequest: MergeRequest;
 }
