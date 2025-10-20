@@ -16,6 +16,7 @@
     let navItems = [
         { title: "Home", url: resolve("/") },
         { title: "Settings", url: resolve("/settings") },
+        { title: "Help", url: resolve("/help") },
     ];
 </script>
 

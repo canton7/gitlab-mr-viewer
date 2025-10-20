@@ -109,7 +109,7 @@
     }
 
     function getOverallColor(mr: MergeRequest) {
-        if (mr.ciStatus != "none" && mr.ciStatus != "success") {
+        if (role == "assignee" && mr.ciStatus != "none" && mr.ciStatus != "success") {
             return "--ci-color";
         }
         if (mr.openDiscussions > 0) {
@@ -147,6 +147,7 @@
                 "card",
                 filteredMergeRequest == null ? null : filteredMergeRequest.key == mr.key ? "selected" : "deselected",
             ]}
+            data-helpid={`merge-request-${mr.key}`}
             animate:flip={{ duration: CARD_ANIMATION_DURATION }}
             transition:fade={{ duration: CARD_ANIMATION_DURATION }}
             style:--approval-color={`var(${getApprovalColor(mr)})`}
@@ -156,7 +157,7 @@
             <!-- svelte-ignore a11y_click_events_have_key_events -->
             <!-- svelte-ignore a11y_no_static_element_interactions -->
             <div class="content" onclick={() => window.open(mr.webUrl, "_blank")}>
-                <p class="m-0">
+                <p class="title m-0">
                     {#each mr.ticketIntegration.createLinkParts(mr.title, mr.webUrl) as linkPart (linkPart)}
                         {#if linkPart.url}
                             <a href={linkPart.url} target="_blank" onclick={(e) => e.stopPropagation()}>
@@ -209,7 +210,11 @@
                 </div>
                 <div class="discussions" {@attach tooltip({ title: getDiscussionTooltip(mr), ...tooltipOptions })}>
                     {#if mr.openDiscussions > 0}
-                        <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank">{mr.openDiscussions}</a>
+                        {#if mr.firstOpenNoteId != null}
+                            <a href={`${mr.webUrl}#note_${mr.firstOpenNoteId}`} target="_blank">{mr.openDiscussions}</a>
+                        {:else}
+                            {mr.openDiscussions}
+                        {/if}
                     {:else}
                         <i class="fa-solid fa-list-check"></i>
                     {/if}

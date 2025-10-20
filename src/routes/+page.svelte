@@ -1,12 +1,9 @@
 <script lang="ts">
     import { browser } from "$app/environment";
     import { resolve } from "$app/paths";
-    import { gitlabClient as client, type MergeRequest } from "$lib/gitlab/GitlabClient.svelte";
-    import MergeRequestTable from "./MergeRequestTable.svelte";
-    import ActivityTable from "./ActivityTable.svelte";
+    import { gitlabClient as client } from "$lib/gitlab/GitlabClient.svelte";
     import isPageVisible from "$lib/PageVisibility";
-
-    let filteredMergeRequest: MergeRequest | null = $state.raw(null);
+    import MergeRequestInterface from "./MergeRequestInterface.svelte";
 
     let lastSeen = $state(new Date());
 
@@ -47,68 +44,11 @@
 {:else if client.state.kind == "error"}
     <p>Error: {client.state.error}</p>
 {:else}
-    <div class="content">
-        <div class="merge-requests">
-            <h2>Assigned</h2>
-
-            <div class="merge-request-table">
-                <MergeRequestTable mergeRequests={client.assigned} role="assignee" bind:filteredMergeRequest />
-            </div>
-        </div>
-
-        <div class="merge-requests">
-            <div>
-                <button class="refresh" aria-label="Refresh" onclick={() => client.refreshAsync()}>
-                    <i class="fa-solid fa-arrows-rotate" class:fa-spin={client.state.kind == "loading"}></i>
-                </button>
-
-                <h2>Reviewing</h2>
-            </div>
-            <div class="merge-request-table">
-                <MergeRequestTable mergeRequests={client.reviewing} role="reviewer" bind:filteredMergeRequest />
-            </div>
-        </div>
-
-        <div class="activity">
-            <ActivityTable
-                activities={(client.activities ?? []).filter(
-                    (x) => filteredMergeRequest == null || x.mergeRequest.key == filteredMergeRequest.key
-                )}
-                {lastSeen} />
-        </div>
-    </div>
+    <MergeRequestInterface
+        assigned={client.assigned}
+        reviewing={client.reviewing}
+        activities={client.activities}
+        {lastSeen}
+        isRefreshing={client.state.kind == "loading"}
+        refresh={() => client.refreshAsync()} />
 {/if}
-
-<style lang="scss">
-    h2 {
-        font-size: 1.4rem;
-        margin-bottom: 20px;
-    }
-
-    .content {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: minmax(50vh, auto) auto;
-        gap: 20px;
-    }
-
-    // .merge-requests {
-    //     display: flex;
-    //     flex-direction: column;
-
-    //     .merge-request-table {
-    //         flex: 1;
-    //     }
-    // }
-
-    .activity {
-        grid-column: 1 / span 2;
-    }
-
-    .refresh {
-        float: right;
-        background: none;
-        border: none;
-        margin-top: 5px;
-    }
-</style>

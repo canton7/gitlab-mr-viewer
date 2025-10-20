@@ -128,7 +128,7 @@ export class GitlabClient {
         }
 
         const mr: MergeRequest = {
-            key: `${mergeRequest.project_id}-${mergeRequest.id}`,
+            key: `${mergeRequest.project_id}-${mergeRequest.id}-${type}`,
             type: type,
             title: mergeRequest.title,
             webUrl: mergeRequest.web_url,
@@ -146,14 +146,13 @@ export class GitlabClient {
             ticketIntegration: await this.getTicketIntegrationAsync(mergeRequest.project_id),
         };
 
-        const activities = await this.createActivitiesAsync(api, type, discussions, pipelines as PipelineSchema[], mr);
+        const activities = await this.createActivitiesAsync(api, discussions, pipelines as PipelineSchema[], mr);
 
         return [mr, activities];
     }
 
     private async createActivitiesAsync(
         api: CoreGitlab,
-        type: MergeRequestType,
         discussions: DiscussionSchema[],
         pipelines: PipelineSchema[],
         mergeRequest: MergeRequest
@@ -184,7 +183,7 @@ export class GitlabClient {
                 if (body) {
                     // It's technically possible for the same MR to show up in "reviewing" and "assigned"
                     activities.push({
-                        key: `${mergeRequest.key}-discussion-${discussion.id}-${type}`,
+                        key: `${mergeRequest.key}-discussion-${discussion.id}`,
                         body: await this.replaceUsernamesAsync(api, body),
                         updatedAt: new Date(discussion.notes[0].updated_at),
                         url: `${mergeRequest.webUrl}#note_${discussion.notes[0].id}`,
@@ -210,7 +209,7 @@ export class GitlabClient {
             const pipelineStatus = PIPELINE_STATUS_MAP.get(pipeline.status);
             if (pipelineStatus !== undefined) {
                 activities.push({
-                    key: `${mergeRequest.key}-pipeline-${pipeline.iid}-${type}`,
+                    key: `${mergeRequest.key}-pipeline-${pipeline.iid}`,
                     body: pipelineStatus,
                     updatedAt: new Date(pipeline.updated_at),
                     url: pipeline.web_url,
@@ -233,7 +232,7 @@ export class GitlabClient {
 
             const appendComments = (current: Collection) =>
                 collectedActivities.push({
-                    key: `${mergeRequest.key}-${synthesisedNoteType}-${current.firstNote.id}-${type}`,
+                    key: `${mergeRequest.key}-${synthesisedNoteType}-${current.firstNote.id}`,
                     body: messageGetter(current.count),
                     updatedAt: dateGetter(current.firstNote),
                     url: `${mergeRequest.webUrl}#note_${current.firstNote.id}`,
