@@ -252,8 +252,8 @@
 
     :root {
         --status-good: lightgreen;
-        --status-my-action: lightblue;
-        --status-others-action: lightgray;
+        --status-my-action: lightskyblue;
+        --status-others-action: silver;
         --status-not-ready: lightgray;
         --status-broken: #ff8787;
     }

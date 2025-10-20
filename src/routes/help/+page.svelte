@@ -188,6 +188,7 @@
 
     const driverConfig: Config = {
         showProgress: true,
+        overlayClickBehavior: "nextStep",
         steps: [
             {
                 popover: {
