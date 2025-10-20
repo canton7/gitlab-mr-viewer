@@ -16,7 +16,7 @@
 </script>
 
 <svelte:head>
-    <title>Settings</title>
+    <title>Merge Requests - Settings</title>
 </svelte:head>
 
 <h1>Settings</h1>

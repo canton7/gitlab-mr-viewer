@@ -350,7 +350,7 @@
 </script>
 
 <svelte:head>
-    <title>Help</title>
+    <title>Merge Requests - Help</title>
 </svelte:head>
 
 <MergeRequestInterface {reviewing} {assigned} {activities} lastSeen={null} isRefreshing={false} refresh={null} />
