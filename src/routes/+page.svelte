@@ -3,7 +3,7 @@
     import { resolve } from "$app/paths";
     import { gitlabClient as client } from "$lib/gitlab/GitlabClient.svelte";
     import isPageVisible from "$lib/PageVisibility";
-    import MergeRequestInterface from "./MergeRequestInterface.svelte";
+    import MergeRequestInterface from "$lib/components/MergeRequestInterface.svelte";
 
     let lastSeen = $state(new Date());
 

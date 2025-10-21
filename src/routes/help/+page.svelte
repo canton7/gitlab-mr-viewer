@@ -1,7 +1,7 @@
 <script lang="ts">
     import { JiraTicketIntegration } from "$lib/gitlab/JiraTicketIntegration";
     import type { Activity, MergeRequest } from "$lib/gitlab/Types";
-    import MergeRequestInterface from "../MergeRequestInterface.svelte";
+    import MergeRequestInterface from "$lib/components/MergeRequestInterface.svelte";
     import { driver, type Config } from "driver.js";
     import "driver.js/dist/driver.css";
     import { onMount } from "svelte";
