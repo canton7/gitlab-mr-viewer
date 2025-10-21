@@ -29,6 +29,7 @@
             <input
                 name="baseUrl"
                 class="form-control"
+                placeholder="gitlab.com"
                 required
                 value={$gitlabSettings.baseUrl}
                 onblur={(e) => (baseUrl = (e.target as HTMLInputElement).value)} />
@@ -42,9 +43,12 @@
         <div class="form-text">
             {#if baseUrl}
                 {@const url = `https://${baseUrl}/-/user_settings/personal_access_tokens`}
-                Generate at <a href={url} target="_blank">{url}</a>.
+                Visit <a href={url} target="_blank">{url}</a>, click "Add new token" (top right), give it a name, select
+                <tt>read_api</tt> scope, and paste the token here.
+            {:else}
+                Visit GitLab, click your avatar (top left) -&gt; Preferences -&gt; Access tokens -&gt; "Add new token"
+                (top right), give it a name, select <tt>read_api</tt> scope, and paste the token here.
             {/if}
-            This needs to have the read_api scope
         </div>
     </div>
 
