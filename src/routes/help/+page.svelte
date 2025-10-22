@@ -272,7 +272,7 @@
                 element: "[data-helpid='merge-request-reviewing-1'] .discussions",
                 popover: {
                     description:
-                        "There are no open discussions here either, but because you're reviewing this it's your job to open discussions. Hence it's blue: my action.",
+                        "There are no open discussions here either, but because you're reviewing this it's your job to open discussions. Hence it's blue: your action.",
                 },
             },
             {
@@ -291,7 +291,7 @@
             {
                 element: "[data-helpid='merge-request-reviewing-1'] .approval",
                 popover: {
-                    description: "This one hasn't been approved and you're reviewing it, so it's blue: my action.",
+                    description: "This one hasn't been approved and you're reviewing it, so it's blue: your action.",
                 },
             },
             {
@@ -337,7 +337,7 @@
                 popover: {
                     description:
                         "<p>And that's it! Have a click around here, then head over to Settings to link up to GitLab.</p>" +
-                        "<p>This is a static website which runs entirely in your browser, so you don't need to worry about confidentiality.</p>",
+                        "<p>This is a static website which runs entirely in your browser.</p>",
                 },
             },
         ],
