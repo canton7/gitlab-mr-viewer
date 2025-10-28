@@ -114,7 +114,7 @@
     const activities: Activity[] = [
         {
             key: "reviewing-2-activity-1",
-            updatedAt: hoursAgo(5),
+            date: hoursAgo(5),
             url: "https://google.co.uk",
             authorName: "You",
             body: "approved this merge request",
@@ -122,7 +122,7 @@
         },
         {
             key: "reviewing-2-activity-2",
-            updatedAt: hoursAgo(5),
+            date: hoursAgo(5),
             url: "https://google.co.uk",
             authorName: "You",
             body: "resolved all threads",
@@ -130,7 +130,7 @@
         },
         {
             key: "reviewing-2-activity-3",
-            updatedAt: hoursAgo(8),
+            date: hoursAgo(8),
             url: "https://google.co.uk",
             authorName: "Pipeline",
             body: "succeeded",
@@ -138,7 +138,7 @@
         },
         {
             key: "reviewing-2-activity-4",
-            updatedAt: hoursAgo(8),
+            date: hoursAgo(8),
             url: "https://google.co.uk",
             authorName: reviewing[1].assigneeName!,
             body: "added 2 commits",
@@ -146,7 +146,7 @@
         },
         {
             key: "reviewing-2-activity-5",
-            updatedAt: hoursAgo(12),
+            date: hoursAgo(12),
             url: "https://google.co.uk",
             authorName: "You",
             body: "added 2 comments",
@@ -154,7 +154,7 @@
         },
         {
             key: "reviewing-2-activity-6",
-            updatedAt: hoursAgo(3),
+            date: hoursAgo(3),
             url: "https://google.co.uk",
             authorName: "Pipeline",
             body: "succeeded",
@@ -162,7 +162,7 @@
         },
         {
             key: "reviewing-2-activity-7",
-            updatedAt: hoursAgo(24 * 3),
+            date: hoursAgo(24 * 3),
             url: "https://google.co.uk",
             authorName: reviewing[1].assigneeName!,
             body: "requested review from You",
@@ -170,7 +170,7 @@
         },
         {
             key: "assigned-3-activity-1",
-            updatedAt: hoursAgo(3),
+            date: hoursAgo(3),
             url: "https://google.co.uk",
             authorName: "Pipeline",
             body: "failed",
@@ -178,7 +178,7 @@
         },
         {
             key: "assigned-3-activity-2",
-            updatedAt: hoursAgo(3),
+            date: hoursAgo(3),
             url: "https://google.co.uk",
             authorName: "You",
             body: "requested review from " + assigned[2].reviewerName,

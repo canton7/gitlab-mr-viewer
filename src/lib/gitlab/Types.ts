@@ -26,7 +26,7 @@ export interface MergeRequest {
 export interface Activity {
     key: string;
     body: string;
-    updatedAt: Date;
+    date: Date;
     url: string;
     authorName: string;
     mergeRequest: MergeRequest;

@@ -18,7 +18,7 @@
         if (lastSeen == null) {
             return null;
         }
-        const index = activities.findIndex((x) => x.updatedAt.getTime() - lastSeen.getTime() < 0);
+        const index = activities.findIndex((x) => x.date.getTime() - lastSeen.getTime() < 0);
         return index == 0 ? null : index;
     });
 </script>
@@ -32,8 +32,8 @@
     </p>
     <p class="footer">
         {activity.mergeRequest.reference} ·
-        <span {@attach tooltip({ title: moment(activity.updatedAt).format(DATE_FORMAT) })}>
-            {$fromNow(activity.updatedAt)}
+        <span {@attach tooltip({ title: moment(activity.date).format(DATE_FORMAT) })}>
+            {$fromNow(activity.date)}
         </span>
     </p>
 {/snippet}

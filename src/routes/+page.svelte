@@ -25,7 +25,7 @@
         }
         let count = 0;
         for (const activity of client.activities) {
-            if (activity.updatedAt > lastSeen) {
+            if (activity.date > lastSeen) {
                 count++;
             } else {
                 break;

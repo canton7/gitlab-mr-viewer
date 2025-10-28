@@ -181,11 +181,10 @@ export class GitlabClient {
                 }
 
                 if (body) {
-                    // It's technically possible for the same MR to show up in "reviewing" and "assigned"
                     activities.push({
                         key: `${mergeRequest.key}-discussion-${discussion.id}`,
                         body: await this.replaceUsernamesAsync(api, body),
-                        updatedAt: new Date(discussion.notes[0].updated_at),
+                        date: new Date(discussion.notes[0].updated_at),
                         url: `${mergeRequest.webUrl}#note_${discussion.notes[0].id}`,
                         authorName: discussion.notes[0].author.name,
                         mergeRequest: mergeRequest,
@@ -211,7 +210,7 @@ export class GitlabClient {
                 activities.push({
                     key: `${mergeRequest.key}-pipeline-${pipeline.iid}`,
                     body: pipelineStatus,
-                    updatedAt: new Date(pipeline.updated_at),
+                    date: new Date(pipeline.updated_at),
                     url: pipeline.web_url,
                     authorName: "Pipeline",
                     mergeRequest: mergeRequest,
@@ -234,7 +233,7 @@ export class GitlabClient {
                 collectedActivities.push({
                     key: `${mergeRequest.key}-${synthesisedNoteType}-${current.firstNote.id}`,
                     body: messageGetter(current.count),
-                    updatedAt: dateGetter(current.firstNote),
+                    date: dateGetter(current.firstNote),
                     url: `${mergeRequest.webUrl}#note_${current.firstNote.id}`,
                     authorName: authorGetter(current.firstNote).name,
                     mergeRequest: mergeRequest,
@@ -264,12 +263,12 @@ export class GitlabClient {
                 appendComments(current);
             }
 
-            collectedActivities.sort((x, y) => x.updatedAt.getTime() - y.updatedAt.getTime());
+            collectedActivities.sort((x, y) => x.date.getTime() - y.date.getTime());
             return collectedActivities;
         }
 
         // First, adding comments
-        commentNotes.sort((x, y) => new Date(x.updated_at).getTime() - new Date(y.updated_at).getTime());
+        commentNotes.sort((x, y) => new Date(x.created_at).getTime() - new Date(y.created_at).getTime());
 
         activities.push(
             ...collectSimilar(
@@ -439,7 +438,7 @@ export class GitlabClient {
 
             this.activities = reviewingActivity
                 .concat(assignedActivity)
-                .sort((x, y) => y.updatedAt.getTime() - x.updatedAt.getTime());
+                .sort((x, y) => y.date.getTime() - x.date.getTime());
         });
     }
 }
