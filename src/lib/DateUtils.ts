@@ -5,6 +5,17 @@ export const DATE_FORMAT = "ddd DD MMMM YYYY [at] h:mm:ss a";
 
 const NOW_UPDATE_INTERVAL_MS = 30 * 1000;
 
+moment.updateLocale("en", {
+    relativeTime: {
+        past: (input) => {
+            if (input == "a day") {
+                return "yesterday";
+            }
+            return `${input} ago`;
+        },
+    },
+});
+
 export const now = readable(new Date(), (set) => {
     set(new Date());
 
