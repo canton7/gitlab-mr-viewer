@@ -8,6 +8,7 @@ import {
     type DiscussionNoteSchema,
     type DiscussionSchema,
     type ExpandedUserSchema,
+    type MergeRequestDiscussionNoteSchema,
     type MergeRequestSchemaWithBasicLabels,
     type PipelineSchema,
 } from "@gitbeaker/core";
@@ -163,7 +164,7 @@ export class GitlabClient {
         const activities: Activity[] = [];
 
         const commentNotes: DiscussionNoteSchema[] = [];
-        // let resolvedNotes: MergeRequestDiscussionNoteSchema[] = [];
+        const resolvedNotes: MergeRequestDiscussionNoteSchema[] = [];
 
         for (const discussion of discussions) {
             if (discussion.notes === undefined || discussion.notes.length == 0) {
@@ -197,9 +198,9 @@ export class GitlabClient {
                 commentNotes.push(...discussion.notes);
 
                 // If a thread is resolved, all times in it get a resolved status
-                // if (discussion.notes[0].resolved_at != undefined) {
-                //     resolvedNotes.push(discussion.notes[0] as MergeRequestDiscussionNoteSchema);
-                // }
+                if (discussion.notes[0].resolved_at != undefined) {
+                    resolvedNotes.push(discussion.notes[0] as MergeRequestDiscussionNoteSchema);
+                }
             }
         }
 
@@ -218,16 +219,16 @@ export class GitlabClient {
             }
         }
 
-        function collectSimilar(
+        function collectSimilar<T extends DiscussionNoteSchema>(
             synthesisedNoteType: string,
-            notes: DiscussionNoteSchema[],
-            dateGetter: (current: DiscussionNoteSchema) => Date,
-            authorGetter: (current: DiscussionNoteSchema) => { id: number; name: string },
+            notes: T[],
+            dateGetter: (current: T) => Date,
+            authorGetter: (current: T) => { id: number; name: string },
             messageGetter: (count: number) => string
         ): Activity[] {
             const collectedActivities: Activity[] = [];
 
-            type Collection = { end: Date; firstNote: DiscussionNoteSchema; count: number };
+            type Collection = { end: Date; firstNote: T; count: number };
 
             const appendComments = (current: Collection) =>
                 collectedActivities.push({
@@ -282,16 +283,18 @@ export class GitlabClient {
         );
 
         // Then, resolving
-        // resolvedNotes.sort((x, y) => new Date(x.resolved_at).getTime() - new Date(y.resolved_at).getTime());
+        resolvedNotes.sort((x, y) => new Date(x.resolved_at).getTime() - new Date(y.resolved_at).getTime());
 
-        // collectSimilar(
-        //     "synthesised-resolve-comments",
-        //     resolvedNotes,
-        //     (note) => new Date(note.resolved_at),
-        //     // @ts-ignore - the type annotation is wrong, and this does contain the correct type
-        //     (note) => note.resolved_by,
-        //     (count) => `resolved ${count} thread(s)`
-        // );
+        activities.push(
+            ...collectSimilar(
+                "synthesised-resolve-comments",
+                resolvedNotes,
+                (note) => new Date(note.resolved_at),
+                // @ts-expect-error - the type annotation is wrong, and this does contain the correct type
+                (note) => note.resolved_by,
+                (count) => `resolved ${count} ${count == 1 ? "thread" : "threads"}`
+            )
+        );
 
         return activities;
     }
