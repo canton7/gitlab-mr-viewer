@@ -128,7 +128,7 @@
         transition: opacity var(--activity-animation-duration) ease;
         opacity: 1;
         &.faded {
-            opacity: 0.5;
+            opacity: 0.3;
         }
     }
 
