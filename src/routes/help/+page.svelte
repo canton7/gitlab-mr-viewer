@@ -334,6 +334,13 @@
                 },
             },
             {
+                element: "[data-helpid='activity'] .mr-reference",
+                popover: {
+                    description:
+                        "You can also mouseover and click the Merge Request ID down here, if you're reviewing the activity list.",
+                },
+            },
+            {
                 popover: {
                     description:
                         "<p>And that's it! Have a click around here, then head over to Settings to link up to GitLab.</p>" +

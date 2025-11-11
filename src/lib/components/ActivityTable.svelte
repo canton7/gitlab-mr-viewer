@@ -4,15 +4,22 @@
     import moment from "moment";
     import { fade, slide } from "svelte/transition";
     import { ACTIVITY_ANIMATION_DURATION } from "$lib/Const";
-    import { type Activity } from "$lib/gitlab/Types";
+    import { type Activity, type MergeRequest } from "$lib/gitlab/Types";
     import { stripHtml } from "$lib/HtmlUtils";
 
     interface Props {
         activities: Activity[];
         lastSeen: Date | null;
+        hoveredMergeRequest: MergeRequest | null;
+        pinnedMergeRequest: MergeRequest | null;
     }
 
-    let { activities, lastSeen }: Props = $props();
+    let {
+        activities,
+        lastSeen,
+        hoveredMergeRequest = $bindable(null),
+        pinnedMergeRequest = $bindable(null),
+    }: Props = $props();
 
     let indexOfLastSeen = $derived.by(() => {
         if (lastSeen == null) {
@@ -31,7 +38,23 @@
         </a>
     </p>
     <p class="footer">
-        {activity.mergeRequest.reference} ·
+        <!-- svelte-ignore a11y_no_static_element_interactions -->
+        <!-- svelte-ignore a11y_click_events_have_key_events -->
+        <span
+            class="mr-reference"
+            onclick={(e) => {
+                e.stopPropagation();
+                if (pinnedMergeRequest?.key == activity.mergeRequest.key) {
+                    pinnedMergeRequest = null;
+                } else {
+                    pinnedMergeRequest = activity.mergeRequest;
+                }
+            }}
+            onmouseenter={() => (hoveredMergeRequest = activity.mergeRequest)}
+            onmouseleave={() => (hoveredMergeRequest = null)}>
+            {activity.mergeRequest.reference}
+        </span>
+        ·
         <span {@attach tooltip({ title: moment(activity.date).format(DATE_FORMAT) })}>
             {$fromNow(activity.date)}
         </span>
@@ -47,7 +70,7 @@
     </div>
 {/snippet}
 
-<div class="activity-table">
+<div class="activity-table" style:--activity-animation-duration={`${ACTIVITY_ANIMATION_DURATION}ms`}>
     {#each activities as activity, index (activity.key)}
         {#if indexOfLastSeen != null && index == indexOfLastSeen}
             <div class="row last-read" transition:fade={{ duration: 100 }}>
@@ -56,7 +79,10 @@
             </div>
         {/if}
 
-        <div class="row" transition:slide={{ duration: ACTIVITY_ANIMATION_DURATION }}>
+        <div
+            class="row"
+            class:faded={hoveredMergeRequest != null && hoveredMergeRequest.key != activity.mergeRequest.key}
+            transition:slide={{ duration: ACTIVITY_ANIMATION_DURATION }}>
             <div class="details left">
                 {#if activity.mergeRequest.type == "assignee"}
                     {@render details(activity)}
@@ -98,6 +124,19 @@
         position: relative;
         grid-column: 1 / span 3;
         grid-template-columns: subgrid;
+
+        transition: opacity var(--activity-animation-duration) ease;
+        opacity: 1;
+        &.faded {
+            opacity: 0.5;
+        }
+    }
+
+    .mr-reference {
+        cursor: pointer;
+        &:hover {
+            text-decoration: underline;
+        }
     }
 
     .last-read {

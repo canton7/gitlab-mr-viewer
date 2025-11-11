@@ -3,7 +3,25 @@
     import ActivityTable from "./ActivityTable.svelte";
     import type { Activity, MergeRequest } from "$lib/gitlab/Types";
 
-    let filteredMergeRequest: MergeRequest | null = $state.raw(null);
+    // MR hovered in the MR table. This highlights the MR card and filters the activity list
+    let tableHoveredMergeRequest: MergeRequest | null = $state.raw(null);
+    // MR pinned in the MR table. This highlights the MR card and filters the activity list. This can also be pinned
+    // from the activity list.
+    let pinnedMergeRequest: MergeRequest | null = $state.raw(null);
+    // MR hovered in the activity list. This highlighs the MR card but does not filter the activity list
+    let activityHoveredMergeRequest: MergeRequest | null = $state.raw(null);
+
+    // When activityHoveredMergeRequest is changed, set this to tableHoveredMergeRequest to select the correct card
+    $effect(() => {
+        tableHoveredMergeRequest = activityHoveredMergeRequest;
+    });
+
+    // The MR to filter the activity list on.
+    // For some reason, using $derived infers the resulting type as 'null', which is incorrect
+    let activityFilteredMergeRequest = $derived.by(
+        // Only listen to tableHoveredMergeRequest if they're not hovering over an activity
+        () => (activityHoveredMergeRequest != null ? null : tableHoveredMergeRequest) ?? pinnedMergeRequest
+    );
 
     interface Props {
         assigned: MergeRequest[] | null;
@@ -22,7 +40,11 @@
         <h2>Assigned</h2>
 
         <div class="merge-request-table">
-            <MergeRequestTable mergeRequests={assigned} role="assignee" bind:filteredMergeRequest />
+            <MergeRequestTable
+                mergeRequests={assigned}
+                role="assignee"
+                bind:hoveredMergeRequest={tableHoveredMergeRequest}
+                bind:pinnedMergeRequest />
         </div>
     </div>
 
@@ -37,16 +59,22 @@
             <h2>Reviewing</h2>
         </div>
         <div class="merge-request-table">
-            <MergeRequestTable mergeRequests={reviewing} role="reviewer" bind:filteredMergeRequest />
+            <MergeRequestTable
+                mergeRequests={reviewing}
+                role="reviewer"
+                bind:hoveredMergeRequest={tableHoveredMergeRequest}
+                bind:pinnedMergeRequest />
         </div>
     </div>
 
     <div class="activity" data-helpid="activity">
         <ActivityTable
             activities={(activities ?? []).filter(
-                (x) => filteredMergeRequest == null || x.mergeRequest.key == filteredMergeRequest.key
+                (x) => activityFilteredMergeRequest == null || x.mergeRequest.key == activityFilteredMergeRequest.key
             )}
-            {lastSeen} />
+            {lastSeen}
+            bind:hoveredMergeRequest={activityHoveredMergeRequest}
+            bind:pinnedMergeRequest />
     </div>
 </div>
 

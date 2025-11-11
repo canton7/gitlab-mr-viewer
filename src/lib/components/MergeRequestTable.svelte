@@ -11,17 +11,18 @@
     interface Props {
         mergeRequests: MergeRequest[] | null;
         role: "assignee" | "reviewer";
-        filteredMergeRequest: MergeRequest | null;
+        hoveredMergeRequest: MergeRequest | null;
+        pinnedMergeRequest: MergeRequest | null;
     }
 
-    let { mergeRequests, role, filteredMergeRequest = $bindable(null) }: Props = $props();
+    let {
+        mergeRequests,
+        role,
+        hoveredMergeRequest = $bindable(null),
+        pinnedMergeRequest = $bindable(null),
+    }: Props = $props();
 
-    let hoveredMergeRequest = $state<MergeRequest | null>(null);
-    let pinnedMergeRequest = $state<MergeRequest | null>(null);
-
-    $effect(() => {
-        filteredMergeRequest = hoveredMergeRequest ?? pinnedMergeRequest;
-    });
+    let filteredMergeRequest = $derived(hoveredMergeRequest ?? pinnedMergeRequest);
 
     function getApprovalColor(mr: MergeRequest) {
         // If it's approved, that's always good
@@ -143,10 +144,8 @@
     {#each mergeRequests ?? [] as mr (mr.key)}
         <!-- svelte-ignore a11y_no_static_element_interactions -->
         <div
-            class={[
-                "card",
-                filteredMergeRequest == null ? null : filteredMergeRequest.key == mr.key ? "selected" : "deselected",
-            ]}
+            class="card"
+            class:faded={filteredMergeRequest != null && filteredMergeRequest.key != mr.key}
             data-helpid={`merge-request-${mr.key}`}
             animate:flip={{ duration: CARD_ANIMATION_DURATION }}
             transition:fade={{ duration: CARD_ANIMATION_DURATION }}
@@ -175,6 +174,7 @@
                         {/if}
                         <span
                             class="no-break mr-reference"
+                            class:pinned={pinnedMergeRequest?.key == mr.key}
                             onclick={(e) => {
                                 e.stopPropagation();
                                 if (pinnedMergeRequest?.key == mr.key) {
@@ -272,7 +272,7 @@
             opacity var(--activity-animation-duration) ease;
 
         opacity: 1;
-        &.deselected {
+        &.faded {
             opacity: 0.5;
         }
     }
@@ -348,7 +348,8 @@
 
         .mr-reference {
             cursor: pointer;
-            &:hover {
+            &:hover,
+            &.pinned {
                 text-decoration: underline;
             }
         }
@@ -356,9 +357,5 @@
         .pin {
             font-size: 0.8em;
         }
-    }
-
-    .card.selected .footer .mr-reference {
-        text-decoration: underline;
     }
 </style>
