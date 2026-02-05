@@ -219,7 +219,10 @@
                         <i class="fa-solid fa-list-check"></i>
                     {/if}
                 </div>
-                <div class="ci" {@attach tooltip({ title: getCiTooltip(mr), ...tooltipOptions })}>
+                <div
+                    class="ci"
+                    class:ci-in-progress={mr.ciStatus == "running"}
+                    {@attach tooltip({ title: getCiTooltip(mr), ...tooltipOptions })}>
                     {#if mr.ciUrl}
                         <a href={mr.ciUrl} target="_blank" aria-label="Pipeline Status">
                             <i class="fa-solid fa-robot"></i>
@@ -286,6 +289,24 @@
         padding: 5px 8px;
     }
 
+    @keyframes wiggle {
+        0% {
+            transform: rotate(0deg);
+        }
+        80% {
+            transform: rotate(0deg);
+        }
+        85% {
+            transform: rotate(5deg);
+        }
+        95% {
+            transform: rotate(-5deg);
+        }
+        100% {
+            transform: rotate(0deg);
+        }
+    }
+
     .bubbles {
         display: grid;
         grid-template-rows: 1fr 1fr 1fr;
@@ -324,6 +345,10 @@
 
         .ci {
             background-color: var(--ci-color);
+
+            &.ci-in-progress i {
+                animation: wiggle 2.5s infinite;
+            }
         }
     }
 
