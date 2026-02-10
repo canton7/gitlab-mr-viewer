@@ -25,6 +25,10 @@
     let filteredMergeRequest = $derived(hoveredMergeRequest ?? pinnedMergeRequest);
 
     function getApprovalColor(mr: MergeRequest) {
+        // If it has conflicts, that's our problem if we're the assignee, otherwise we don't care
+        if (mr.hasConflicts && role == "assignee") {
+            return "--status-broken";
+        }
         // If it's approved, that's always good
         if (mr.isApproved) {
             return "--status-good";
@@ -43,10 +47,23 @@
     }
 
     function getApprovalTooltip(mr: MergeRequest) {
-        if (mr.isApproved) {
-            return "Approved";
+        if (role == "assignee") {
+            if (mr.hasConflicts) {
+                return "Cannot merge: conflicts";
+            }
+            if (mr.isApproved) {
+                return "Approved";
+            }
+            return "Not approved";
+        } else {
+            if (mr.isApproved) {
+                return "Approved";
+            }
+            if (mr.hasConflicts) {
+                return "Cannot merge: conflicts";
+            }
+            return "Pending approval";
         }
-        return role == "reviewer" ? "Pending approval" : "Not approved";
     }
 
     function getDiscussionColor(mr: MergeRequest) {

@@ -18,6 +18,7 @@ export interface MergeRequest {
     firstOpenNoteId: number | null;
     openDiscussions: number;
     totalDiscussions: number;
+    hasConflicts: boolean;
     ciStatus: GitlabCiStatus;
     ciUrl: string | null;
     ticketIntegration: TicketIntegration;

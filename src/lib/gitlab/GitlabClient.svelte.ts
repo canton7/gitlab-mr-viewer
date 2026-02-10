@@ -142,6 +142,7 @@ export class GitlabClient {
             firstOpenNoteId: firstOpenNoteId,
             openDiscussions: resolvable,
             totalDiscussions: totalDiscussions,
+            hasConflicts: mergeRequest.has_conflicts,
             ciStatus: commitStatus.at(0)?.status ?? "none",
             ciUrl: commitStatus.at(0)?.target_url ?? null,
             ticketIntegration: await this.getTicketIntegrationAsync(mergeRequest.project_id),
