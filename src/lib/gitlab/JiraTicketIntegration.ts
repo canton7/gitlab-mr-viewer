@@ -12,7 +12,9 @@ export class JiraTicketIntegration extends TicketIntegration {
         this._url = url;
 
         issuePrefix ??= "";
-        issueRegex ??= DEFAULT_KEY_REGEX.source;
+        if (!issueRegex) {
+            issueRegex = DEFAULT_KEY_REGEX.source;
+        }
         this._issueRegex = `\\b${issuePrefix}(?<issue>${issueRegex})`;
     }
 
